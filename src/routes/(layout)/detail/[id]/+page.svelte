@@ -193,7 +193,7 @@
 
 				<!-- Content Info -->
 				<div class="w-full md:w-3/4">
-					<h1 class="text-primary mb-2 text-3xl font-bold">
+					<h1 class="text-primary mb-2 text-3xl font-bold capitalize">
 						{episode.content.title}
 					</h1>
 					<h2 class="mb-4 text-2xl font-semibold text-white">

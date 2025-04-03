@@ -98,10 +98,53 @@
 	let isLoading = $state(false);
 	let loadingContentId = $state<number | null>(null);
 
+	// Pagination state
+	let currentPage = $state(1);
+	let itemsPerPage = $state(10);
+	let totalPages = $state(1);
+	let paginatedContents = $state<typeof contents>([]);
+
 	onMount(() => {
 		isPageLoaded = true;
 		console.log('Page mounted');
+		updatePaginatedContents();
 	});
+
+	// Function to update paginated contents
+	function updatePaginatedContents() {
+		// Filter contents that have episodes
+		const contentsWithEpisodes = contents.filter((content) =>
+			episodes.some((ep) => ep.content_id === content.id)
+		);
+
+		// Sort by latest episode ID (highest first)
+		const sortedContents = [...contentsWithEpisodes].sort((a, b) => {
+			const latestEpisodeA = episodes
+				.filter((ep) => ep.content_id === a.id)
+				.sort((x, y) => y.id - x.id)[0];
+
+			const latestEpisodeB = episodes
+				.filter((ep) => ep.content_id === b.id)
+				.sort((x, y) => y.id - x.id)[0];
+
+			return latestEpisodeB?.id - latestEpisodeA?.id;
+		});
+
+		// Calculate total pages
+		totalPages = Math.ceil(sortedContents.length / itemsPerPage);
+
+		// Get current page items
+		const startIndex = (currentPage - 1) * itemsPerPage;
+		const endIndex = startIndex + itemsPerPage;
+		paginatedContents = sortedContents.slice(startIndex, endIndex);
+	}
+
+	// Function to change page
+	function changePage(page: number) {
+		if (page < 1 || page > totalPages) return;
+		currentPage = page;
+		updatePaginatedContents();
+	}
 
 	const string = $state('hello there!!');
 
@@ -183,14 +226,14 @@
 		<section class="mb-20">
 			<div class="mb-10 flex items-center justify-between">
 				<h2 class="relative text-4xl font-bold">
-					Latest <span class="text-primary">Releases</span>
+					Rilis <span class="text-primary">Terbaru</span>
 					<span class="bg-primary absolute -bottom-2 left-0 h-1 w-24"></span>
 				</h2>
 				<Button variant="ghost" class="text-primary hover:bg-primary/10">View All</Button>
 			</div>
 
 			<div class="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-4">
-				{#each contents as content, i}
+				{#each paginatedContents as content, i}
 					{#if episodes.filter((ep) => ep.content_id === content.id).length > 0}
 						{@const latestEpisode = episodes
 							.filter((ep) => ep.content_id === content.id)
@@ -276,13 +319,52 @@
 					{/if}
 				{/each}
 			</div>
+
+			<!-- Pagination Controls -->
+			{#if totalPages > 1}
+				<div class="mt-8 flex justify-center">
+					<div class="flex items-center space-x-2">
+						<Button
+							variant="outline"
+							size="sm"
+							disabled={currentPage === 1}
+							onclick={() => changePage(currentPage - 1)}
+							class="px-3"
+						>
+							&lt;
+						</Button>
+
+						{#each Array(totalPages) as _, index}
+							{@const pageNumber = index + 1}
+							<Button
+								variant={currentPage === pageNumber ? 'default' : 'outline'}
+								size="sm"
+								onclick={() => changePage(pageNumber)}
+								class={currentPage === pageNumber ? 'bg-primary text-white' : ''}
+							>
+								{pageNumber}
+							</Button>
+						{/each}
+
+						<Button
+							variant="outline"
+							size="sm"
+							disabled={currentPage === totalPages}
+							onclick={() => changePage(currentPage + 1)}
+							class="px-3"
+						>
+							&gt;
+						</Button>
+					</div>
+				</div>
+			{/if}
 		</section>
 
 		<!-- Genre Section - Simplified text-based list -->
 		<section class="mb-20">
 			<div class="mb-10 flex items-center justify-between" in:fade={{ duration: 800, delay: 900 }}>
 				<h2 class="relative text-4xl font-bold">
-					Browse <span class="text-primary">Categories</span>
+					Daftar <span class="text-primary">Genre</span>
 					<span class="bg-primary absolute -bottom-2 left-0 h-1 w-24"></span>
 				</h2>
 			</div>
@@ -308,7 +390,7 @@
 					</div>
 				{/each}
 			</div>
-
+<!-- 
 			<div class="mt-8 text-center">
 				<Button
 					variant="outline"
@@ -316,7 +398,7 @@
 				>
 					View All Categories
 				</Button>
-			</div>
+			</div> -->
 		</section>
 
 		<!-- CTA Section - New section -->
