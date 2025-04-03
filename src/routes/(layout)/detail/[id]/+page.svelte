@@ -414,6 +414,46 @@
 					{/if}
 				</div>
 
+				<!-- Episode List -->
+				<div
+					class="mb-6 rounded-lg border border-gray-700 bg-gray-800/50 p-6 shadow-lg backdrop-blur"
+				>
+					<h2 class="mb-4 flex items-center text-xl font-bold text-white">
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							class="text-primary mr-2 h-5 w-5"
+							fill="none"
+							viewBox="0 0 24 24"
+							stroke="currentColor"
+						>
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M4 6h16M4 10h16M4 14h16M4 18h16"
+							/>
+						</svg>
+						Daftar Episode
+					</h2>
+
+					<div
+						class="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6"
+					>
+						{#if allEpisodes && allEpisodes.length > 0}
+							{#each allEpisodes.filter((ep) => ep.content_id === episode.content_id) as ep, i}
+								<button
+									onclick={() => navigateToEpisode(ep.id)}
+									class={`rounded px-3 py-2 ${episode && episode.episode_number === ep.episode_number ? 'bg-primary text-white' : 'bg-gray-700 text-gray-200 hover:bg-gray-600'} text-center transition-all duration-200`}
+								>
+									{ep.episode_number}
+								</button>
+							{/each}
+						{:else}
+							<p class="text-gray-400">Tidak ada episode tersedia untuk episode ini.</p>
+						{/if}
+					</div>
+				</div>
+
 				<!-- Description -->
 				<div
 					class="mb-6 rounded-lg border border-gray-700 bg-gray-800/50 p-6 shadow-lg backdrop-blur"
@@ -488,46 +528,6 @@
 							{/if}
 						</button>
 					{/if}
-				</div>
-
-				<!-- Episode List -->
-				<div
-					class="mb-6 rounded-lg border border-gray-700 bg-gray-800/50 p-6 shadow-lg backdrop-blur"
-				>
-					<h2 class="mb-4 flex items-center text-xl font-bold text-white">
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							class="text-primary mr-2 h-5 w-5"
-							fill="none"
-							viewBox="0 0 24 24"
-							stroke="currentColor"
-						>
-							<path
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								stroke-width="2"
-								d="M4 6h16M4 10h16M4 14h16M4 18h16"
-							/>
-						</svg>
-						Daftar Episode
-					</h2>
-
-					<div
-						class="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6"
-					>
-						{#if allEpisodes && allEpisodes.length > 0}
-							{#each allEpisodes.filter((ep) => ep.content_id === episode.content_id) as ep, i}
-								<button
-									onclick={() => navigateToEpisode(ep.id)}
-									class={`rounded px-3 py-2 ${episode && episode.episode_number === ep.episode_number ? 'bg-primary text-white' : 'bg-gray-700 text-gray-200 hover:bg-gray-600'} text-center transition-all duration-200`}
-								>
-									{ep.episode_number}
-								</button>
-							{/each}
-						{:else}
-							<p class="text-gray-400">Tidak ada episode tersedia untuk episode ini.</p>
-						{/if}
-					</div>
 				</div>
 
 				<!-- Ongoing Donghua -->
