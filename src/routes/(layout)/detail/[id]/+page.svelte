@@ -38,6 +38,7 @@
 		created_at: string;
 		updated_at: string;
 	}
+
 	interface AllEpisodeData {
 		id: number;
 		content_id: number;
@@ -74,14 +75,41 @@
 		updated_at: string;
 	}
 
+	interface ContentData {
+		id: number;
+		category_id: number | null;
+		title: string;
+		description: string;
+		thumbnail: string;
+		cover_image: string;
+		total_episodes: number;
+		status: string;
+		release_date: string;
+		country_origin: string;
+		created_at: string;
+		updated_at: string;
+	}
+
+	interface CategoryData {
+		id: number;
+		name: string;
+		contents: ContentData[];
+		created_at: string;
+		updated_at: string;
+	}
+
 	interface typeData {
 		episodes: EpisodeData;
 		allEpisodes: AllEpisodeData[];
+		content: ContentData[];
+		categories: CategoryData[];
 	}
 
 	export let data: typeData;
 	let episode: EpisodeData = data.episodes;
 	let allEpisodes: AllEpisodeData[] = data.allEpisodes;
+	let content: ContentData[] = data.content;
+	let categories: CategoryData[] = data.categories;
 	let selectedServer = 0;
 	let isDescriptionExpanded = false;
 	let isLoading = false;
@@ -249,6 +277,34 @@
 							</svg>
 							{episode.content.status}
 						</span>
+					</div>
+
+					<!-- genres -->
+					<h1 class="text-primary mb-2 text-3xl font-bold">Genres</h1>
+					<div class="mb-4 flex flex-wrap gap-3">
+						{#each categories as category}
+							{#if category.contents.some((c) => c.id === episode.content.id)}
+								<span
+									class="bg-primary flex items-center rounded-full px-3 py-1 text-sm font-medium text-white"
+								>
+									<svg
+										xmlns="http://www.w3.org/2000/svg"
+										class="mr-1 h-4 w-4"
+										fill="none"
+										viewBox="0 0 24 24"
+										stroke="currentColor"
+									>
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+										/>
+									</svg>
+									{category.name}
+								</span>
+							{/if}
+						{/each}
 					</div>
 				</div>
 			</div>
@@ -435,7 +491,9 @@
 				</div>
 
 				<!-- Episode List -->
-				<div class="rounded-lg border border-gray-700 bg-gray-800/50 p-6 shadow-lg backdrop-blur">
+				<div
+					class="mb-6 rounded-lg border border-gray-700 bg-gray-800/50 p-6 shadow-lg backdrop-blur"
+				>
 					<h2 class="mb-4 flex items-center text-xl font-bold text-white">
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
@@ -468,6 +526,89 @@
 							{/each}
 						{:else}
 							<p class="text-gray-400">Tidak ada episode tersedia untuk episode ini.</p>
+						{/if}
+					</div>
+				</div>
+
+				<!-- Ongoing Donghua -->
+				<div class="rounded-lg border border-gray-700 bg-gray-800/50 p-6 shadow-lg backdrop-blur">
+					<h2 class="mb-4 flex items-center text-xl font-bold text-white">
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							class="text-primary mr-2 h-5 w-5"
+							fill="none"
+							viewBox="0 0 24 24"
+							stroke="currentColor"
+						>
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M4 6h16M4 10h16M4 14h16M4 18h16"
+							/>
+						</svg>
+						Ongoing Donghua
+					</h2>
+
+					<div class="px-4 py-6">
+						<h2 class="mb-4 text-2xl font-bold">Lanjutkan Menonton</h2>
+
+						<div class="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+							{#each content
+								.filter((c: any) => c.status === 'ongoing' && allEpisodes.some((ep) => ep.content_id === c.id))
+								.sort((a: any, b: any) => b.id - a.id)
+								.slice(0, 5) as contentItem, i}
+								{@const latestEpisode = allEpisodes
+									.filter((ep) => ep.content_id === contentItem.id)
+									.sort((a, b) => b.id - a.id)[0]}
+
+								<button
+									class="group from-primary/90 to-primary relative w-full overflow-hidden rounded-lg bg-gradient-to-br text-left shadow transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+									onclick={() => navigateToEpisode(latestEpisode.id)}
+									onkeydown={(e) => e.key === 'Enter' && navigateToEpisode(latestEpisode.id)}
+								>
+									<div class="absolute inset-0 bg-black/20"></div>
+
+									<div class="relative p-4 text-white">
+										<!-- Content title with clean typography -->
+										<h3 class="mb-2 font-semibold tracking-tight">{contentItem.title}</h3>
+
+										<!-- Latest episode with visual indicator -->
+										<div class="flex items-center space-x-2">
+											<div class="h-2 w-2 animate-pulse rounded-full bg-rose-600"></div>
+											<p class="text-sm font-medium">
+												Terbaru: Episode {latestEpisode.episode_number}
+											</p>
+										</div>
+
+										<!-- Play icon that appears on hover -->
+										<div
+											class="absolute right-3 bottom-3 rounded-full bg-white/20 p-2 opacity-0 transition-all duration-300 group-hover:opacity-100"
+										>
+											<svg
+												xmlns="http://www.w3.org/2000/svg"
+												class="h-5 w-5"
+												viewBox="0 0 20 20"
+												fill="currentColor"
+											>
+												<path
+													fill-rule="evenodd"
+													d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"
+													clip-rule="evenodd"
+												/>
+											</svg>
+										</div>
+									</div>
+								</button>
+							{/each}
+						</div>
+
+						{#if content.filter((c) => c.status === 'ongoing' && allEpisodes.some((ep) => ep.content_id === c.id)).length === 0}
+							<div
+								class="flex h-32 items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50"
+							>
+								<p class="text-center text-gray-500">Tidak ada konten ongoing tersedia</p>
+							</div>
 						{/if}
 					</div>
 				</div>

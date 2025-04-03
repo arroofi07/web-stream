@@ -14,18 +14,18 @@
 			}
 		};
 	}
-</script>
-
-<script lang="ts">
 	import * as Card from '$lib/components/ui/card';
 	import { Search, PanelTopOpen, X, ChevronRight } from '@lucide/svelte';
 	import { fade, slide } from 'svelte/transition';
 	import Input from './ui/input/input.svelte';
+	import { goto } from '$app/navigation';
+</script>
 
+<script lang="ts">
 	const navItems = [
 		{
 			label: 'Home',
-			href: '/'
+			href: '/home'
 		},
 		{
 			label: 'Genres',
@@ -46,11 +46,11 @@
 	}
 </script>
 
-<nav id="navbar" class="bg-primary z-50 px-4 py-3 text-black border-b-2 border-white">
+<nav id="navbar" class="bg-primary z-50 border-b-2 border-white px-4 py-3 text-black">
 	<div class="mx-auto flex max-w-7xl items-center justify-between">
 		<!-- Logo and Search Section -->
 		<div class="flex items-center gap-4">
-			<a href="/" class="flex items-center gap-2 transition-transform hover:scale-105">
+			<a href="/home" class="flex items-center gap-2 transition-transform hover:scale-105">
 				<img
 					src="/logo.png"
 					alt="logo"
