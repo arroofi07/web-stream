@@ -104,16 +104,37 @@
 	let totalPages = $state(1);
 	let paginatedContents = $state<typeof contents>([]);
 
+	// Search functionality
+	let searchQuery = $state('');
+	let filteredContents = $state<typeof contents>([]);
+
 	onMount(() => {
 		isPageLoaded = true;
 		console.log('Page mounted');
+		filteredContents = [...contents];
 		updatePaginatedContents();
 	});
+
+	// Function to handle search
+	function handleSearch() {
+		// Reset to first page when searching
+		currentPage = 1;
+
+		// Filter contents based on search query
+		if (searchQuery.trim() === '') {
+			filteredContents = [...contents];
+		} else {
+			const query = searchQuery.toLowerCase().trim();
+			filteredContents = contents.filter((content) => content.title.toLowerCase().includes(query));
+		}
+
+		updatePaginatedContents();
+	}
 
 	// Function to update paginated contents
 	function updatePaginatedContents() {
 		// Filter contents that have episodes
-		const contentsWithEpisodes = contents.filter((content) =>
+		const contentsWithEpisodes = filteredContents.filter((content) =>
 			episodes.some((ep) => ep.content_id === content.id)
 		);
 
@@ -204,6 +225,22 @@
 			</div>
 		</section>
 
+		<div class="relative z-30 -mt-20 mb-20">
+			<div class="mx-auto">
+				<div class="overflow-hidden rounded-xl bg-white shadow-xl dark:bg-gray-800">
+					<div class="p-6 text-center">
+						<p class="text-sm">
+							<span class="text-primary mr-2 font-bold">Pasang Iklan:</span>
+							Hubungi
+							<a href="mailto:admin@gmail.com" class="text-primary font-bold hover:underline">
+								admin@gmail.com
+							</a>
+						</p>
+					</div>
+				</div>
+			</div>
+		</div>
+
 		<!-- Search Section - Redesigned with better positioning and style -->
 		<div class="relative z-30 -mt-10 mb-20">
 			<div class="relative mx-auto max-w-3xl" in:fade={{ duration: 800, delay: 500 }}>
@@ -212,10 +249,15 @@
 				>
 					<Input
 						type="search"
-						placeholder="Search for your favorite donghua.. "
+						placeholder="Cari donghua favoritmu.."
 						class="border-0 px-6 py-6 text-lg focus:ring-0"
+						bind:value={searchQuery}
+						onkeyup={(e: KeyboardEvent) => e.key === 'Enter' && handleSearch()}
 					/>
-					<Button class="mr-2 flex h-12 w-12 items-center justify-center rounded-full">
+					<Button
+						class="mr-2 flex h-12 w-12 items-center justify-center rounded-full"
+						onclick={handleSearch}
+					>
 						<Search class="h-5 w-5" />
 					</Button>
 				</div>
@@ -232,93 +274,112 @@
 				<Button variant="ghost" class="text-primary hover:bg-primary/10">View All</Button>
 			</div>
 
-			<div class="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-4">
-				{#each paginatedContents as content, i}
-					{#if episodes.filter((ep) => ep.content_id === content.id).length > 0}
-						{@const latestEpisode = episodes
-							.filter((ep) => ep.content_id === content.id)
-							.sort((a, b) => b.id - a.id)[0]}
-						<Card
-							class="group overflow-hidden border-none shadow-lg transition-all hover:scale-105 hover:shadow-xl active:scale-75"
-							onmouseenter={() => (hoveredCard = i)}
-							onmouseleave={() => (hoveredCard = -1)}
-							onclick={() => navigateToDetail(latestEpisode.id, content.id)}
-						>
-							<div class="flex h-full flex-col">
-								<div class="relative h-48 overflow-hidden">
-									<img
-										src={content.cover_image}
-										alt="Latest Release"
-										class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
-									/>
-									<div
-										class="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 transition-opacity group-hover:opacity-100"
-									>
-										<Play class="h-12 w-12 text-white" />
-									</div>
-									{#if isLoading && loadingContentId === content.id}
+			{#if paginatedContents.length === 0}
+				<div class="flex flex-col items-center justify-center py-16 text-center">
+					<div class="mb-4 text-5xl">🔍</div>
+					<h3 class="mb-2 text-2xl font-bold">No results found</h3>
+					<p class="text-gray-600 dark:text-gray-400">
+						Kami tidak menemukan konten yang cocok dengan "{searchQuery}"
+					</p>
+					<Button
+						class="mt-6"
+						onclick={() => {
+							searchQuery = '';
+							handleSearch();
+						}}
+					>
+						Reset
+					</Button>
+				</div>
+			{:else}
+				<div class="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-4">
+					{#each paginatedContents as content, i}
+						{#if episodes.filter((ep) => ep.content_id === content.id).length > 0}
+							{@const latestEpisode = episodes
+								.filter((ep) => ep.content_id === content.id)
+								.sort((a, b) => b.id - a.id)[0]}
+							<Card
+								class="group overflow-hidden border-none shadow-lg transition-all hover:scale-105 hover:shadow-xl active:scale-75"
+								onmouseenter={() => (hoveredCard = i)}
+								onmouseleave={() => (hoveredCard = -1)}
+								onclick={() => navigateToDetail(latestEpisode.id, content.id)}
+							>
+								<div class="flex h-full flex-col">
+									<div class="relative h-48 overflow-hidden">
+										<img
+											src={content.cover_image}
+											alt="Latest Release"
+											class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
+										/>
 										<div
-											class="absolute inset-0 flex items-center justify-center bg-black/60 transition-opacity"
+											class="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 transition-opacity group-hover:opacity-100"
 										>
-											<div
-												class="h-8 w-8 animate-spin rounded-full border-4 border-white border-t-transparent"
-											></div>
+											<Play class="h-12 w-12 text-white" />
 										</div>
-									{/if}
-									<div
-										class={`absolute top-2 right-2 rounded-md px-2 py-1 text-xs font-bold text-white ${i % 2 === 0 ? 'bg-green-500' : 'bg-amber-500'}`}
-									>
-										{content.status}
-									</div>
-									<div
-										class={`absolute top-2 left-2 rounded-md bg-gray-600 px-2 py-1 text-xs font-bold text-white `}
-									>
-										{#if content.country_origin === 'china'}
-											Donghua
-										{:else if content.country_origin === 'japan'}
-											Anime
-										{:else}
-											Anime
+										{#if isLoading && loadingContentId === content.id}
+											<div
+												class="absolute inset-0 flex items-center justify-center bg-black/60 transition-opacity"
+											>
+												<div
+													class="h-8 w-8 animate-spin rounded-full border-4 border-white border-t-transparent"
+												></div>
+											</div>
 										{/if}
+										<div
+											class={`absolute top-2 right-2 rounded-md px-2 py-1 text-xs font-bold text-white ${i % 2 === 0 ? 'bg-green-500' : 'bg-amber-500'}`}
+										>
+											{content.status}
+										</div>
+										<div
+											class={`absolute top-2 left-2 rounded-md bg-gray-600 px-2 py-1 text-xs font-bold text-white `}
+										>
+											{#if content.country_origin === 'china'}
+												Donghua
+											{:else if content.country_origin === 'japan'}
+												Anime
+											{:else}
+												Anime
+											{/if}
+										</div>
+										<div
+											class="bg-primary absolute bottom-2 left-2 rounded-md border-[1px] border-white px-2 py-1 text-xs font-medium text-black"
+										>
+											Ep {latestEpisode.episode_number}
+										</div>
+										<div
+											class={`absolute right-2 bottom-2 rounded-md bg-gray-600 px-2 py-1 text-xs font-medium text-white`}
+										>
+											{latestEpisode.duration} min
+										</div>
 									</div>
-									<div
-										class="bg-primary absolute bottom-2 left-2 rounded-md border-[1px] border-white px-2 py-1 text-xs font-medium text-black"
-									>
-										Episode {latestEpisode.episode_number}
-									</div>
-									<div
-										class={`absolute right-2 bottom-2 rounded-md bg-gray-600 px-2 py-1 text-xs font-medium text-white`}
-									>
-										{latestEpisode.duration} min
+									<div class="flex-1 bg-white p-4 dark:bg-gray-800">
+										<div class="mb-2 flex items-center justify-between">
+											<h3 class="line-clamp-1 text-lg font-bold">
+												{content.title}
+											</h3>
+										</div>
+										<p class="mb-2 text-sm font-semibold text-gray-600 dark:text-gray-400">
+											Subtitle Indonesia
+										</p>
+										<div class="mb-3 flex items-center">
+											<span class="text-xs text-gray-500">
+												{new Date(latestEpisode.release_date).toLocaleDateString()}
+											</span>
+										</div>
+										<Button
+											size="sm"
+											class="bg-primary/90 w-full cursor-pointer text-white transition-colors duration-300 hover:bg-black"
+											variant={hoveredCard === i ? 'default' : 'outline'}
+										>
+											Watch
+										</Button>
 									</div>
 								</div>
-								<div class="flex-1 bg-white p-4 dark:bg-gray-800">
-									<div class="mb-2 flex items-center justify-between">
-										<h3 class="line-clamp-1 text-lg font-bold">
-											{content.title}
-										</h3>
-									</div>
-									<p class="mb-2 text-sm font-semibold text-gray-600 dark:text-gray-400">
-										Subtitle Indonesia
-									</p>
-									<div class="mb-3 flex items-center">
-										<span class="text-xs text-gray-500">
-											{new Date(latestEpisode.release_date).toLocaleDateString()}
-										</span>
-									</div>
-									<Button
-										size="sm"
-										class="bg-primary/90 w-full cursor-pointer text-white transition-colors duration-300 hover:bg-black"
-										variant={hoveredCard === i ? 'default' : 'outline'}
-									>
-										Watch
-									</Button>
-								</div>
-							</div>
-						</Card>
-					{/if}
-				{/each}
-			</div>
+							</Card>
+						{/if}
+					{/each}
+				</div>
+			{/if}
 
 			<!-- Pagination Controls -->
 			{#if totalPages > 1}
@@ -390,7 +451,7 @@
 					</div>
 				{/each}
 			</div>
-<!-- 
+			<!-- 
 			<div class="mt-8 text-center">
 				<Button
 					variant="outline"
