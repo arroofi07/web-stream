@@ -94,6 +94,10 @@
 	// State for hover effect
 	let hoveredCard = $state(-1);
 
+	// Add loading state
+	let isLoading = $state(false);
+	let loadingContentId = $state<number | null>(null);
+
 	onMount(() => {
 		isPageLoaded = true;
 		console.log('Page mounted');
@@ -103,6 +107,17 @@
 
 	function navigate() {
 		goto(`/detail/${string}`);
+	}
+
+	// Function to handle navigation with loading
+	async function navigateToDetail(id: number, contentId: number) {
+		isLoading = true;
+		loadingContentId = contentId;
+
+		// Short timeout to show loading effect (300ms)
+		await new Promise((resolve) => setTimeout(resolve, 300));
+
+		goto(`/detail/${id}`);
 	}
 </script>
 
@@ -184,10 +199,10 @@
 							.filter((ep) => ep.content_id === content.id)
 							.sort((a, b) => b.id - a.id)[0]}
 						<Card
-							class="group overflow-hidden border-none shadow-lg transition-all hover:scale-105 hover:shadow-xl"
+							class="group overflow-hidden border-none shadow-lg transition-all hover:scale-105 hover:shadow-xl active:scale-75"
 							onmouseenter={() => (hoveredCard = i)}
 							onmouseleave={() => (hoveredCard = -1)}
-							onclick={() => goto(`/detail/${latestEpisode.id}`)}
+							onclick={() => navigateToDetail(latestEpisode.id, content.id)}
 						>
 							<div class="flex h-full flex-col">
 								<div class="relative h-48 overflow-hidden">
@@ -201,6 +216,15 @@
 									>
 										<Play class="h-12 w-12 text-white" />
 									</div>
+									{#if isLoading && loadingContentId === content.id}
+										<div
+											class="absolute inset-0 flex items-center justify-center bg-black/60 transition-opacity"
+										>
+											<div
+												class="h-8 w-8 animate-spin rounded-full border-4 border-white border-t-transparent"
+											></div>
+										</div>
+									{/if}
 									<div
 										class={`absolute top-2 right-2 rounded-md px-2 py-1 text-xs font-bold text-white ${i % 2 === 0 ? 'bg-green-500' : 'bg-amber-500'}`}
 									>
