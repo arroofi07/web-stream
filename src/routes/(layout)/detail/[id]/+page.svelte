@@ -103,7 +103,7 @@
 	}
 
 	// Function to handle episode navigation with loading state
-	function navigateToEpisode(episodeId: number) {
+	function navigateToEpisode(episodeId: number | undefined) {
 		if (!episodeId) return;
 		isLoading = true;
 		goto(`/detail/${episodeId}`);
@@ -277,7 +277,7 @@
 									class="rounded-lg px-4 py-2 {selectedServer === index
 										? 'bg-primary text-white'
 										: 'bg-gray-800 text-gray-300 hover:bg-gray-700'} flex items-center transition-all duration-200"
-									on:click={() => (selectedServer = index)}
+									onclick={() => (selectedServer = index)}
 								>
 									<span class="mr-2">{link.server_name}</span>
 									<span class="rounded bg-gray-900 px-2 py-0.5 text-xs">{link.quality}</span>
@@ -291,9 +291,13 @@
 				<div class="mb-6 flex justify-between">
 					{#if episode && episode.episode_number > 1 && allEpisodes}
 						<button
-							on:click={() =>
+							onclick={() =>
 								navigateToEpisode(
-									allEpisodes.find((ep) => ep.episode_number === episode.episode_number - 1)?.id
+									allEpisodes.find(
+										(ep) =>
+											ep.content_id === episode.content_id &&
+											ep.episode_number === episode.episode_number - 1
+									)?.id
 								)}
 							class="flex items-center rounded-lg bg-gray-800 px-4 py-2 text-gray-300 transition-all duration-200 hover:bg-gray-700"
 						>
@@ -317,30 +321,38 @@
 						<div></div>
 					{/if}
 
-					{#if allEpisodes && episode && episode.episode_number < allEpisodes.length}
-						<button
-							on:click={() =>
-								navigateToEpisode(
-									allEpisodes.find((ep) => ep.episode_number === episode.episode_number + 1)?.id
-								)}
-							class="bg-primary hover:bg-primary/80 flex items-center rounded-lg px-4 py-2 text-white transition-all duration-200"
-						>
-							Episode Selanjutnya
-							<svg
-								xmlns="http://www.w3.org/2000/svg"
-								class="ml-2 h-5 w-5"
-								fill="none"
-								viewBox="0 0 24 24"
-								stroke="currentColor"
+					{#if allEpisodes && episode}
+						{#if allEpisodes.some((ep) => ep.content_id === episode.content_id && ep.episode_number === episode.episode_number + 1)}
+							<button
+								onclick={() =>
+									navigateToEpisode(
+										allEpisodes.find(
+											(ep) =>
+												ep.content_id === episode.content_id &&
+												ep.episode_number === episode.episode_number + 1
+										)?.id
+									)}
+								class="bg-primary hover:bg-primary/80 flex items-center rounded-lg px-4 py-2 text-white transition-all duration-200"
 							>
-								<path
-									stroke-linecap="round"
-									stroke-linejoin="round"
-									stroke-width="2"
-									d="M9 5l7 7-7 7"
-								/>
-							</svg>
-						</button>
+								Episode Selanjutnya
+								<svg
+									xmlns="http://www.w3.org/2000/svg"
+									class="ml-2 h-5 w-5"
+									fill="none"
+									viewBox="0 0 24 24"
+									stroke="currentColor"
+								>
+									<path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										stroke-width="2"
+										d="M9 5l7 7-7 7"
+									/>
+								</svg>
+							</button>
+						{:else}
+							<div></div>
+						{/if}
 					{:else}
 						<div></div>
 					{/if}
@@ -373,19 +385,17 @@
 					<div
 						class={`relative text-gray-300 ${!isDescriptionExpanded && 'max-h-24 overflow-hidden'}`}
 					>
-						<p>{episode.description || 'Tidak ada deskripsi untuk episode ini.'}</p>
+						<p>{episode.content.description || 'Tidak ada deskripsi untuk episode ini.'}</p>
 
 						{#if !isDescriptionExpanded}
-							<div
-								class="absolute right-0 bottom-0 left-0 h-12 bg-gradient-to-t from-gray-800/90 to-transparent"
-							></div>
+							<div class="absolute right-0 bottom-0 left-0 h-12"></div>
 						{/if}
 					</div>
 
-					{#if episode.description && episode.description.length > 100}
+					{#if episode.content.description && episode.content.description.length > 100}
 						<button
 							class="text-primary hover:text-primary/80 mt-4 flex items-center font-medium transition-all duration-200"
-							on:click={() => (isDescriptionExpanded = !isDescriptionExpanded)}
+							onclick={() => (isDescriptionExpanded = !isDescriptionExpanded)}
 						>
 							{#if isDescriptionExpanded}
 								<span>Tutup</span>
@@ -445,20 +455,20 @@
 					</h2>
 
 					<div
-						class="scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800 max-h-60 overflow-y-auto pr-2"
+						class="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6"
 					>
-						<div
-							class="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6"
-						>
-							{#each allEpisodes || [] as ep, i}
+						{#if allEpisodes && allEpisodes.length > 0}
+							{#each allEpisodes.filter((ep) => ep.content_id === episode.content_id) as ep, i}
 								<button
-									on:click={() => navigateToEpisode(ep.id)}
+									onclick={() => navigateToEpisode(ep.id)}
 									class={`rounded px-3 py-2 ${episode && episode.episode_number === ep.episode_number ? 'bg-primary text-white' : 'bg-gray-700 text-gray-200 hover:bg-gray-600'} text-center transition-all duration-200`}
 								>
 									{ep.episode_number}
 								</button>
 							{/each}
-						</div>
+						{:else}
+							<p class="text-gray-400">Tidak ada episode tersedia untuk episode ini.</p>
+						{/if}
 					</div>
 				</div>
 			{:else}

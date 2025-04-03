@@ -97,7 +97,7 @@
 	// Add loading state
 	let isLoading = $state(false);
 	let loadingContentId = $state<number | null>(null);
-
+ 
 	onMount(() => {
 		isPageLoaded = true;
 		console.log('Page mounted');
