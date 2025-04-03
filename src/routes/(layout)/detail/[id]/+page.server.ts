@@ -1,11 +1,12 @@
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ params }) => {
-	const id = params.id;
-	const videoUrl = 'https://ok.ru/videoembed/7690537011817?nochat=1';
+	const response = await fetch(`https://arpansi-enterprise.my.id/api/episodes/${params.id}`, {
+		method: 'GET'
+	});
+	const data = await response.json();
 
 	return {
-		id,
-		videoUrl
+		episodes: data.data
 	};
 };

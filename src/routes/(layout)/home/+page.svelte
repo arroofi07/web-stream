@@ -53,14 +53,14 @@
 				// 	release_date: Date;
 				// 	country_origin: string;
 				// };
-				streaming_links: {
+				streaming_links: Array<{
 					id: number;
 					episode_id: number;
 					server_name: string;
 					quality: string;
 					url: string;
 					is_active: boolean;
-				};
+				}>;
 			}>;
 
 			// episode end
@@ -87,7 +87,6 @@
 	let episodes = data.data.episodes;
 	let contents = data.data.contents;
 	let categories = data.data.categories;
-	$inspect(contents);
 
 	// State for animations
 	let isPageLoaded = false;
@@ -184,11 +183,11 @@
 						{@const latestEpisode = episodes
 							.filter((ep) => ep.content_id === content.id)
 							.sort((a, b) => b.id - a.id)[0]}
-
 						<Card
 							class="group overflow-hidden border-none shadow-lg transition-all hover:scale-105 hover:shadow-xl"
 							onmouseenter={() => (hoveredCard = i)}
 							onmouseleave={() => (hoveredCard = -1)}
+							onclick={() => goto(`/detail/${latestEpisode.id}`)}
 						>
 							<div class="flex h-full flex-col">
 								<div class="relative h-48 overflow-hidden">
