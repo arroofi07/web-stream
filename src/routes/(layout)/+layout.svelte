@@ -1,7 +1,8 @@
 <script lang="ts">
+	import Navbar from '$lib/components/navbar.svelte';
 </script>
 
-<div>
-	<h1 class="text-2xl font-bold">Layout</h1>
+<div class="">
+	<Navbar />
 	<slot />
 </div>

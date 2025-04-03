@@ -10,140 +10,336 @@
 		CardTitle
 	} from '$lib/components/ui/card';
 	import { Input } from '$lib/components/ui/input';
-	import { fade, fly } from 'svelte/transition';
+	import { fade, fly, scale } from 'svelte/transition';
+	import { goto } from '$app/navigation';
+	import { Search, Play, Star } from '@lucide/svelte';
+	import overGoddess from '$lib/assets/cover/tales-of-herding-gods.jpg';
 
-	// let { featuredDonghua }: PageData = $props();
-	let { data } = $props();
-	let featuredDonghua = data.featuredDonghua;
+	interface typeData {
+		data: {
+			// contents start
+			contents: Array<{
+				id: number;
+				category_id: number;
+				title: string;
+				description: string;
+				thumbnail: string;
+				cover_image: string;
+				total_episodes: number;
+				status: string;
+				release_date: Date;
+				country_origin: string;
+			}>;
+			// contents end
 
-	// Tambahkan state untuk animasi
+			// episode start
+			episodes: Array<{
+				id: number;
+				content_id: number;
+				title: string;
+				episode_number: number;
+				description: string;
+				duration: number;
+				release_date: Date;
+				// content: {
+				// 	id: number;
+				// 	category_id: number;
+				// 	title: string;
+				// 	description: string;
+				// 	thumbnail: string;
+				// 	cover_image: string;
+				// 	total_episodes: number;
+				// 	status: string;
+				// 	release_date: Date;
+				// 	country_origin: string;
+				// };
+				streaming_links: {
+					id: number;
+					episode_id: number;
+					server_name: string;
+					quality: string;
+					url: string;
+					is_active: boolean;
+				};
+			}>;
+
+			// episode end
+
+			// genres start
+			categories: Array<{
+				id: number;
+				name: string;
+				description: string;
+				contents: Array<{
+					id: number;
+					title: string;
+					description: string;
+					thumbnail: string;
+					cover_image: string;
+				}>;
+			}>;
+			// genres end
+		};
+	}
+
+	// Use $props() for Svelte 5 runes mode
+	let data: typeData = $props();
+	let episodes = data.data.episodes;
+	let contents = data.data.contents;
+	let categories = data.data.categories;
+	$inspect(contents);
+
+	// State for animations
 	let isPageLoaded = false;
+
+	// State for hover effect
+	let hoveredCard = $state(-1);
 
 	onMount(() => {
 		isPageLoaded = true;
 		console.log('Page mounted');
 	});
+
+	const string = $state('hello there!!');
+
+	function navigate() {
+		goto(`/detail/${string}`);
+	}
 </script>
 
-<div class="container mx-auto px-4 py-8">
-	<!-- Hero Section -->
-	<section
-		class="relative mb-12 h-[600px] overflow-hidden rounded-xl shadow-2xl"
-		in:fade={{ duration: 1000 }}
-	>
-		<div
-			class="absolute inset-0 z-10 bg-gradient-to-r from-primary/80 via-primary/50 to-transparent"
-		></div>
-		<img
-			src="/images/hero-banner.jpg"
-			alt="Featured Donghua"
-			class="h-full w-full transform object-cover transition-transform duration-700 hover:scale-105"
-		/>
-		<div
-			class="absolute bottom-16 left-10 z-20 max-w-2xl"
-			in:fly={{ y: 50, duration: 1000, delay: 300 }}
+<div
+	class="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800"
+>
+	<div class="container mx-auto px-4 py-8">
+		<!-- Hero Section - Improved with full-width design and better contrast -->
+		<section
+			class="relative mb-16 h-[70vh] overflow-hidden rounded-2xl shadow-2xl"
+			in:fade={{ duration: 1200 }}
 		>
-			<Card class="border-none bg-primary/80 backdrop-blur-sm">
-				<CardHeader>
-					<CardTitle>
-						<h1 class="text-shadow-lg text-6xl leading-tight font-bold text-white">
-							Discover Amazing Donghua
-						</h1>
-					</CardTitle>
-					<CardDescription>
-						<p class="text-xl text-gray-200">Watch the best Chinese animations with HD quality</p>
-					</CardDescription>
-				</CardHeader>
-				<CardFooter class="pt-0">
-					<Button variant="secondary" size="lg" class="transition-transform hover:scale-105">
-						Start Watching
-					</Button>
-				</CardFooter>
-			</Card>
-		</div>
-	</section>
-
-	<!-- Search Section -->
-	<div class="mb-16">
-		<div class="relative mx-auto max-w-2xl" in:fade={{ duration: 800, delay: 500 }}>
-			<Input
-				type="search"
-				placeholder="Search donghua..."
-				class="focus:border-primary w-full rounded-full border-2 border-gray-300 shadow-lg"
+			<div
+				class="absolute inset-0 z-10 bg-gradient-to-r from-black/80 via-black/50 to-transparent"
+			></div>
+			<img
+				src={overGoddess}
+				alt="Featured Donghua"
+				class="h-full w-full object-cover transition-transform duration-700 hover:scale-105"
 			/>
-			<span class="absolute top-1/2 right-4 -translate-y-1/2 text-gray-400">🔍</span>
-		</div>
-	</div>
+			<div
+				class="absolute bottom-0 left-0 z-10 w-full p-8 md:bottom-16 md:left-10 md:max-w-2xl"
+				in:fly={{ y: 50, duration: 1000, delay: 300 }}
+			>
+				<Card class="border-none bg-black/40 backdrop-blur-md">
+					<CardHeader>
+						<CardTitle>
+							<h1 class="text-shadow-lg text-4xl leading-tight font-bold text-white md:text-6xl">
+								Dunia <span class="text-primary">Donghua</span> yang Luar Biasa
+							</h1>
+						</CardTitle>
+						<CardDescription>
+							<p class="text-lg text-gray-200 md:text-xl">
+								Rasakan keajaiban animasi dengan kualitas HD yang memukau.
+							</p>
+						</CardDescription>
+					</CardHeader>
+					<CardFooter class="flex gap-4 pt-2">
+						<Button size="lg" class="cursor-pointer transition-all hover:scale-105 hover:shadow-lg">
+							<Play class="mr-2 h-5 w-5" /> Mulai Menonton
+						</Button>
+					</CardFooter>
+				</Card>
+			</div>
+		</section>
 
-	<!-- Featured Donghua -->
-	<section class="mb-16">
-		<h2 class="mb-8 text-center text-4xl font-bold" in:fade={{ duration: 800, delay: 700 }}>
-			Featured Donghua
-		</h2>
-		<div class="grid grid-cols-2 gap-8 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-			{#each featuredDonghua as donghua, i}
-				<div in:fly={{ y: 50, duration: 800, delay: 800 + i * 100 }}>
-					<Card
-						class="group bg-primary flex h-full flex-col transition-all duration-300 hover:shadow-xl "
-					>
-						<CardHeader class="p-0">
-							<div class="relative h-[150px] overflow-hidden rounded-t-lg lg:h-[250px]">
-								<img
-									src={donghua.image}
-									alt={donghua.title}
-									class="h-full w-full transform object-cover transition-transform duration-500 group-hover:scale-110"
-								/>
-								<div
-									class="absolute top-3 right-3 rounded-full bg-black/80 px-3 py-1 text-sm text-white"
-								>
-									{donghua.episode}
+		<!-- Search Section - Redesigned with better positioning and style -->
+		<div class="relative z-30 -mt-10 mb-20">
+			<div class="relative mx-auto max-w-3xl" in:fade={{ duration: 800, delay: 500 }}>
+				<div
+					class="border-primary flex items-center overflow-hidden rounded-full border-2 bg-white shadow-xl dark:bg-gray-800"
+				>
+					<Input
+						type="search"
+						placeholder="Search for your favorite donghua.. "
+						class="border-0 px-6 py-6 text-lg focus:ring-0"
+					/>
+					<Button class="mr-2 flex h-12 w-12 items-center justify-center rounded-full">
+						<Search class="h-5 w-5" />
+					</Button>
+				</div>
+			</div>
+		</div>
+
+		<!-- Latest Releases Section - New section -->
+		<section class="mb-20">
+			<div class="mb-10 flex items-center justify-between">
+				<h2 class="relative text-4xl font-bold">
+					Latest <span class="text-primary">Releases</span>
+					<span class="bg-primary absolute -bottom-2 left-0 h-1 w-24"></span>
+				</h2>
+				<Button variant="ghost" class="text-primary hover:bg-primary/10">View All</Button>
+			</div>
+
+			<div class="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-4">
+				{#each contents as content, i}
+					{#if episodes.filter((ep) => ep.content_id === content.id).length > 0}
+						{@const latestEpisode = episodes
+							.filter((ep) => ep.content_id === content.id)
+							.sort((a, b) => b.id - a.id)[0]}
+
+						<Card
+							class="group overflow-hidden border-none shadow-lg transition-all hover:scale-105 hover:shadow-xl"
+							onmouseenter={() => (hoveredCard = i)}
+							onmouseleave={() => (hoveredCard = -1)}
+						>
+							<div class="flex h-full flex-col">
+								<div class="relative h-48 overflow-hidden">
+									<img
+										src={content.cover_image}
+										alt="Latest Release"
+										class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
+									/>
+									<div
+										class="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 transition-opacity group-hover:opacity-100"
+									>
+										<Play class="h-12 w-12 text-white" />
+									</div>
+									<div
+										class={`absolute top-2 right-2 rounded-md px-2 py-1 text-xs font-bold text-white ${i % 2 === 0 ? 'bg-green-500' : 'bg-amber-500'}`}
+									>
+										{content.status}
+									</div>
+									<div
+										class={`absolute top-2 left-2 rounded-md bg-gray-600 px-2 py-1 text-xs font-bold text-white `}
+									>
+										{#if content.country_origin === 'china'}
+											Donghua
+										{:else if content.country_origin === 'japan'}
+											Anime
+										{:else}
+											Anime
+										{/if}
+									</div>
+									<div
+										class="bg-primary absolute bottom-2 left-2 rounded-md border-[1px] border-white px-2 py-1 text-xs font-medium text-black"
+									>
+										Episode {latestEpisode.episode_number}
+									</div>
+									<div
+										class={`absolute right-2 bottom-2 rounded-md bg-gray-600 px-2 py-1 text-xs font-medium text-white`}
+									>
+										{latestEpisode.duration} min
+									</div>
+								</div>
+								<div class="flex-1 bg-white p-4 dark:bg-gray-800">
+									<div class="mb-2 flex items-center justify-between">
+										<h3 class="line-clamp-1 text-lg font-bold">
+											{content.title}
+										</h3>
+									</div>
+									<p class="mb-2 text-sm font-semibold text-gray-600 dark:text-gray-400">
+										Subtitle Indonesia
+									</p>
+									<div class="mb-3 flex items-center">
+										<span class="text-xs text-gray-500">
+											{new Date(latestEpisode.release_date).toLocaleDateString()}
+										</span>
+									</div>
+									<Button
+										size="sm"
+										class="bg-primary/90 w-full cursor-pointer text-white transition-colors duration-300 hover:bg-black"
+										variant={hoveredCard === i ? 'default' : 'outline'}
+									>
+										Watch
+									</Button>
 								</div>
 							</div>
-						</CardHeader>
-						<CardContent class="flex flex-grow flex-col">
-							<CardTitle class="mb-3 line-clamp-2 text-xl">{donghua.title}</CardTitle>
-						</CardContent>
-						<CardFooter class="mt-auto">
-							<Button
-								variant="outline"
-								class="hover:bg-primary w-full transition-colors hover:text-white"
-							>
-								Watch Now
-							</Button>
-						</CardFooter>
-					</Card>
-				</div>
-			{/each}
-		</div>
-	</section>
+						</Card>
+					{/if}
+				{/each}
+			</div>
+		</section>
 
-	<!-- Categories -->
-	<section class="mb-12">
-		<h2 class="mb-8 text-center text-4xl font-bold" in:fade={{ duration: 800, delay: 900 }}>
-			Categories
-		</h2>
-		<div class="flex flex-wrap justify-center gap-4" in:fade={{ duration: 800, delay: 1000 }}>
-			<Button variant="outline" class="hover:bg-primary px-6 transition-colors hover:text-white">
-				Action
-			</Button>
-			<Button variant="outline" class="hover:bg-primary px-6 transition-colors hover:text-white">
-				Fantasy
-			</Button>
-			<Button variant="outline" class="hover:bg-primary px-6 transition-colors hover:text-white">
-				Martial Arts
-			</Button>
-			<Button variant="outline" class="hover:bg-primary px-6 transition-colors hover:text-white">
-				Adventure
-			</Button>
-			<Button variant="outline" class="hover:bg-primary px-6 transition-colors hover:text-white">
-				Romance
-			</Button>
+		<!-- Genre Section - Simplified text-based list -->
+		<section class="mb-20">
+			<div class="mb-10 flex items-center justify-between" in:fade={{ duration: 800, delay: 900 }}>
+				<h2 class="relative text-4xl font-bold">
+					Browse <span class="text-primary">Categories</span>
+					<span class="bg-primary absolute -bottom-2 left-0 h-1 w-24"></span>
+				</h2>
+			</div>
+
+			<div class="grid grid-cols-2 gap-x-12 gap-y-6 md:grid-cols-3 lg:grid-cols-4">
+				{#each categories as category, i}
+					<div
+						class="hover:border-primary dark:hover:border-primary group border-b border-gray-200 pb-2 transition-all duration-300 dark:border-gray-700"
+						in:fly={{ y: 20, duration: 800, delay: 1000 + i * 50 }}
+					>
+						<div class="flex items-center justify-between">
+							<a
+								href={`/genre/${category.name.toLowerCase()}`}
+								class="hover:text-primary flex items-center text-lg transition-colors duration-300 group-hover:translate-x-1"
+							>
+								<span class="text-primary mr-2 font-medium">{i + 1}.</span>
+								{category.name}
+							</a>
+							<span class="text-sm text-gray-500 dark:text-gray-400"
+								>{category.contents.length}
+							</span>
+						</div>
+					</div>
+				{/each}
+			</div>
+
+			<div class="mt-8 text-center">
+				<Button
+					variant="outline"
+					class="hover:bg-primary border-primary text-primary transition-colors hover:text-white"
+				>
+					View All Categories
+				</Button>
+			</div>
+		</section>
+
+		<!-- CTA Section - New section -->
+		<section class="mb-12">
+			<div class="bg-primary relative overflow-hidden rounded-2xl p-8 md:p-12">
+				<div
+					class="absolute top-0 right-0 h-64 w-64 translate-x-1/4 -translate-y-1/4 rounded-full bg-white/10"
+				></div>
+				<div
+					class="absolute bottom-0 left-0 h-40 w-40 -translate-x-1/4 translate-y-1/4 rounded-full bg-white/10"
+				></div>
+
+				<div class="relative z-10 max-w-2xl">
+					<h2 class="mb-4 text-3xl font-bold text-white md:text-4xl">Join Our Donghua Community</h2>
+					<p class="mb-6 text-lg text-white/90">
+						Get notified about new releases, special events, and exclusive content.
+					</p>
+
+					<div class="flex flex-col space-y-4 sm:flex-row sm:space-y-0 sm:space-x-4">
+						<Input
+							type="email"
+							placeholder="Enter your email"
+							class="h-12 border-white/30 bg-white/20 text-white placeholder:text-white/70 focus:border-white"
+						/>
+						<Button class="text-primary h-12 bg-white hover:bg-white/90">Subscribe Now</Button>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<!-- Footer Button -->
+		<div class="mb-8 text-center">
+			<h3 class="font-sans text-lg font-semibold">
+				Created by Naa Enterprise 🙆‍♂️🙋‍♂️ & Svelte Powered 2025
+			</h3>
 		</div>
-	</section>
+	</div>
 </div>
 
 <style>
 	.text-shadow-lg {
-		text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+		text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
 	}
+
+	/* Untuk warna theme */
 </style>

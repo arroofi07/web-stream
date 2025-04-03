@@ -3,23 +3,27 @@ import talesOfHerdingGods from '$lib/assets/cover/tales-of-herding-gods.jpg';
 import overGoddess from '$lib/assets/cover/over-goddess.jpg';
 
 export const load: PageServerLoad = async () => {
-	// Data donghua (contoh)
-	const featuredDonghua = [
-		{
-			title: 'tales of herding gods',
-			image: talesOfHerdingGods,
-			episode: 'Episode 265',
-			rating: '4.8'
-		},
-		{
-			title: 'over-goddess',
-			image: overGoddess,
-			episode: 'Episode 192',
-			rating: '4.7'
-		}
-	];
+	// get data categories / genres
+	const responseCategories = await fetch('https://arpansi-enterprise.my.id/api/categories', {
+		method: 'GET'
+	});
+	const dataCategories = await responseCategories.json();
+
+	// get api data contents
+	const responseContents = await fetch('https://arpansi-enterprise.my.id/api/contents', {
+		method: 'GET'
+	});
+	const dataContents = await responseContents.json();
+
+	// get api data episodes
+	const response = await fetch('https://arpansi-enterprise.my.id/api/episodes', {
+		method: 'GET'
+	});
+	const dataEpisodes = await response.json();
 
 	return {
-		featuredDonghua
+		contents: dataContents.data,
+		episodes: dataEpisodes.data,
+		categories: dataCategories
 	};
 };
