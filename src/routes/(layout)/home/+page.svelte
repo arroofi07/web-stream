@@ -97,7 +97,7 @@
 	// Add loading state
 	let isLoading = $state(false);
 	let loadingContentId = $state<number | null>(null);
- 
+
 	onMount(() => {
 		isPageLoaded = true;
 		console.log('Page mounted');
@@ -127,40 +127,37 @@
 	<div class="container mx-auto px-4 py-8">
 		<!-- Hero Section - Improved with full-width design and better contrast -->
 		<section
-			class="relative mb-16 h-[70vh] overflow-hidden rounded-2xl shadow-2xl"
+			class="relative mb-20 h-[80vh] overflow-hidden rounded-3xl shadow-2xl"
 			in:fade={{ duration: 1200 }}
 		>
 			<div
-				class="absolute inset-0 z-10 bg-gradient-to-r from-black/80 via-black/50 to-transparent"
+				class="absolute inset-0 z-10 bg-gradient-to-r from-black/90 via-black/60 to-transparent"
 			></div>
 			<img
 				src={overGoddess}
 				alt="Featured Donghua"
-				class="h-full w-full object-cover transition-transform duration-700 hover:scale-105"
+				class="h-full w-full object-cover transition-transform duration-1000 hover:scale-105"
 			/>
 			<div
-				class="absolute bottom-0 left-0 z-10 w-full p-8 md:bottom-16 md:left-10 md:max-w-2xl"
+				class="absolute bottom-0 left-0 z-10 w-full p-8 md:bottom-20 md:left-16 md:max-w-2xl"
 				in:fly={{ y: 50, duration: 1000, delay: 300 }}
 			>
-				<Card class="border-none bg-black/40 backdrop-blur-md">
-					<CardHeader>
-						<CardTitle>
-							<h1 class="text-shadow-lg text-4xl leading-tight font-bold text-white md:text-6xl">
-								Dunia <span class="text-primary">Donghua</span> yang Luar Biasa
-							</h1>
-						</CardTitle>
-						<CardDescription>
-							<p class="text-lg text-gray-200 md:text-xl">
-								Rasakan keajaiban animasi dengan kualitas HD yang memukau.
-							</p>
-						</CardDescription>
-					</CardHeader>
-					<CardFooter class="flex gap-4 pt-2">
-						<Button size="lg" class="cursor-pointer transition-all hover:scale-105 hover:shadow-lg">
+				<div class="space-y-6">
+					<h1 class="text-shadow-lg text-5xl leading-tight font-extrabold text-white md:text-7xl">
+						Dunia <span class="text-primary">Donghua</span> yang Luar Biasa
+					</h1>
+					<p class="text-lg text-gray-200 md:text-xl">
+						Rasakan keajaiban animasi dengan kualitas HD yang memukau.
+					</p>
+					<div class="flex flex-wrap gap-4 pt-4">
+						<Button size="lg" class="bg-primary hover:bg-primary/90 group relative overflow-hidden">
+							<span
+								class="absolute inset-0 bg-white/20 transition-transform duration-300 group-hover:translate-x-full"
+							></span>
 							<Play class="mr-2 h-5 w-5" /> Mulai Menonton
 						</Button>
-					</CardFooter>
-				</Card>
+					</div>
+				</div>
 			</div>
 		</section>
 

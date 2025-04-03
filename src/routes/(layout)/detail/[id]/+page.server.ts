@@ -23,7 +23,6 @@ export const load: PageServerLoad = async ({ params }) => {
 	});
 	const dataCategories = await responseCategories.json();
 
-	console.log(dataCategories);
 	return {
 		episodes: data.data,
 		allEpisodes: dataEpisode.data,
