@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount, onDestroy, afterUpdate } from 'svelte';
+	import { onMount, onDestroy } from 'svelte';
 	import { Button } from '$lib/components/ui/button';
 	import {
 		Card,
@@ -102,6 +102,22 @@
 	// Memoize content filtering for better performance
 	let contentFilterCache = $state(new Map());
 
+	// Add these variables for enhanced caching and performance
+	let cachedContents = $state(new Map());
+	let lastRefreshTimestamp = $state(0);
+	const CACHE_LIFETIME = 5 * 60 * 1000; // 5 minutes in milliseconds
+	let isQuickLoading = $state(false);
+
+	// Add these variables for ad management
+	let adLoaded = $state(false);
+	let adAttempts = $state(0);
+	const MAX_AD_ATTEMPTS = 3;
+	let adContainerId = 'container-d561750ea858b8acfce6ddcf0eb58de7';
+
+	// Add these variables for navigation tracking
+	let isReturningToPage = $state(false);
+	let pageVisits = $state(0);
+
 	$effect(() => {
 		// Update searchQuery when URL changes
 		const newSearchQuery = $page.url.searchParams.get('search') || '';
@@ -149,42 +165,39 @@
 	// Add loading state for genre links
 	let loadingGenreId = $state<number | null>(null);
 
-	// Add these variables for ad management
-	let adLoaded = $state(false);
-	let adAttempts = $state(0);
-	const MAX_AD_ATTEMPTS = 3;
-
-	// Add these variables for navigation tracking
-	let isReturningToPage = $state(false);
-	let pageVisits = $state(0);
-
-	function changeCoverImage() {
-		if (contents && contents.length > 0) {
-			// Only use the first 4 images (or fewer if there aren't 4 available)
-			const availableImages = Math.min(maxImagesToShow, contents.length);
-			return contents[currentCoverIndex % availableImages].cover_image;
-		}
-		return '';
-	}
-
 	onMount(() => {
 		isPageLoaded = true;
 		pageVisits++;
 
-		// Check if this is a return visit
+		// Check browser cache first for faster loading
 		if (browser) {
-			// Use sessionStorage to track if we're returning to the page
-			const lastVisitedPage = sessionStorage.getItem('lastVisitedPage');
-			if (lastVisitedPage && lastVisitedPage !== window.location.pathname) {
-				isReturningToPage = true;
-				// Fast refresh for returning users
-				quickRefreshContent();
+			const cachedData = sessionStorage.getItem('homePageCache');
+			const cachedTimestamp = parseInt(sessionStorage.getItem('homePageCacheTimestamp') || '0');
+
+			// If we have recent cached data, use it immediately
+			if (cachedData && Date.now() - cachedTimestamp < CACHE_LIFETIME) {
+				try {
+					const parsedCache = JSON.parse(cachedData);
+
+					// Apply cached data for instant display
+					if (parsedCache.filteredContents) {
+						filteredContents = parsedCache.filteredContents;
+						paginatedContents = parsedCache.paginatedContents || [];
+						totalPages = parsedCache.totalPages || 1;
+						isQuickLoading = true;
+
+						// Show content immediately
+						updatePaginatedContents();
+
+						console.log('Using cached data for instant display');
+					}
+				} catch (e) {
+					console.error('Error parsing cached data:', e);
+				}
 			}
-			// Store current page for future reference
-			sessionStorage.setItem('lastVisitedPage', window.location.pathname);
 		}
 
-		// Build episode map for faster lookups
+		// Always build episode map and initialize data
 		buildEpisodeMap();
 
 		// Initialize filtered contents - use all contents if no search query
@@ -195,28 +208,41 @@
 			handleSearch();
 		}
 
-		// Start rotating cover images every 2 seconds
+		// Cache the current state for future quick loads
+		if (browser) {
+			try {
+				const cacheData = {
+					filteredContents,
+					paginatedContents,
+					totalPages
+				};
+				sessionStorage.setItem('homePageCache', JSON.stringify(cacheData));
+				sessionStorage.setItem('homePageCacheTimestamp', Date.now().toString());
+				console.log('Updated page cache');
+			} catch (e) {
+				console.error('Error caching page data:', e);
+			}
+		}
+
+		// Start rotating cover images
 		if (contents && contents.length > 0) {
 			coverImageInterval = setInterval(() => {
-				// Only cycle through the first 4 images
 				const availableImages = Math.min(maxImagesToShow, contents.length);
 				currentCoverIndex = (currentCoverIndex + 1) % availableImages;
 			}, 4000);
 		}
 
-		// Improved ad loading strategy with priority loading for returning users
-		if (isReturningToPage) {
-			// Load ads immediately for returning users
-			loadAds(true);
-		} else {
-			// Normal loading for first visit
-			loadAds();
-		}
+		// Reset ad state when mounting
+		adLoaded = false;
+		adAttempts = 0;
 
 		// Add navigation event listener to detect when user is coming back to this page
 		if (browser) {
 			window.addEventListener('pageshow', handlePageShow);
 		}
+
+		// Load ads with high priority
+		loadAds(true);
 	});
 
 	onDestroy(() => {
@@ -231,14 +257,17 @@
 	});
 
 	// Function to handle page show events (including back navigation)
-	function handlePageShow(event) {
+	function handlePageShow(event: any) {
 		// Check if the page is being loaded from cache (back/forward navigation)
 		if (event.persisted) {
-			isReturningToPage = true;
-			// Perform a quick refresh when returning via back button
-			quickRefreshContent();
-			// Reload ads with priority
-			loadAds(true);
+			console.log('Page loaded from cache (back/forward navigation)');
+
+			// Force a full page refresh when returning to home with a small delay
+			if (browser) {
+				setTimeout(() => {
+					window.location.reload();
+				}, 50); // Small delay to ensure everything is ready
+			}
 		}
 	}
 
@@ -431,67 +460,111 @@
 		goto(`/genres/${genreId}`);
 	}
 
-	// Function to load ads with retry mechanism
-	function loadAds(isPriority = false) {
-		// Load social bar script with better error handling
+	// Function to preload ad scripts without executing them
+	function preloadAdScripts() {
+		if (browser) {
+			// Preload social bar script
+			const socialBarPreload = document.createElement('link');
+			socialBarPreload.rel = 'preload';
+			socialBarPreload.as = 'script';
+			socialBarPreload.href =
+				'//pl26302165.effectiveratecpm.com/2d/8c/88/2d8c88477fa6d1c610e37670b907ee53.js';
+			document.head.appendChild(socialBarPreload);
+
+			// Preload banner ad script
+			const bannerAdPreload = document.createElement('link');
+			bannerAdPreload.rel = 'preload';
+			bannerAdPreload.as = 'script';
+			bannerAdPreload.href =
+				'//pl26302113.effectiveratecpm.com/d561750ea858b8acfce6ddcf0eb58de7/invoke.js';
+			document.head.appendChild(bannerAdPreload);
+
+			console.log('Preloaded ad scripts');
+		}
+	}
+
+	// Function to load ads with improved performance
+	function loadAds(highPriority = false) {
 		if (!adLoaded && adAttempts < MAX_AD_ATTEMPTS) {
 			adAttempts++;
+			console.log(
+				`Loading ads (attempt ${adAttempts}/${MAX_AD_ATTEMPTS}), priority: ${highPriority}`
+			);
 
 			try {
-				// Load the social bar script
+				// Create a new ad container if it doesn't exist
+				if (!document.getElementById(adContainerId)) {
+					const container = document.createElement('div');
+					container.id = adContainerId;
+					const adContainer = document.querySelector('.ad-container');
+					if (adContainer) {
+						// Clear any existing content
+						adContainer.querySelectorAll(`#${adContainerId}`).forEach((el) => el.remove());
+						adContainer.appendChild(container);
+					}
+				}
+
+				// Social bar script - always load this regardless of adLoaded state
 				const socialBarScript = document.createElement('script');
 				socialBarScript.type = 'text/javascript';
 				socialBarScript.src =
 					'//pl26302165.effectiveratecpm.com/2d/8c/88/2d8c88477fa6d1c610e37670b907ee53.js';
-				socialBarScript.async = !isPriority; // Make it blocking for priority loads
+				socialBarScript.async = false; // Make it synchronous to ensure it loads
 
-				// Load the banner ad script
+				// Banner ad script
 				const bannerAdScript = document.createElement('script');
 				bannerAdScript.setAttribute('data-cfasync', 'false');
 				bannerAdScript.src =
 					'//pl26302113.effectiveratecpm.com/d561750ea858b8acfce6ddcf0eb58de7/invoke.js';
-				bannerAdScript.async = !isPriority; // Make it blocking for priority loads
+				bannerAdScript.async = false; // Make it synchronous to ensure it loads
 
-				// Add event listeners to track loading
+				// Success handlers
 				socialBarScript.onload = () => {
-					console.log('Social bar script loaded successfully');
-					adLoaded = true;
+					console.log('Social bar script loaded');
 				};
 
 				bannerAdScript.onload = () => {
-					console.log('Banner ad script loaded successfully');
-
-					// Create container if it doesn't exist
-					if (!document.getElementById('container-d561750ea858b8acfce6ddcf0eb58de7')) {
-						const container = document.createElement('div');
-						container.id = 'container-d561750ea858b8acfce6ddcf0eb58de7';
-						const adContainer = document.querySelector('.ad-container');
-						if (adContainer) {
-							adContainer.appendChild(container);
-						}
-					}
+					console.log('Banner ad script loaded');
+					adLoaded = true;
 				};
 
-				// Error handling
+				// Error handlers with faster retries for high priority
 				socialBarScript.onerror = () => {
-					console.error('Failed to load social bar script, retrying...');
-					setTimeout(() => loadAds(isPriority), isPriority ? 500 : 1000); // Faster retry for priority
+					console.error('Failed to load social bar script');
+					setTimeout(() => {
+						document.head.appendChild(socialBarScript.cloneNode(true));
+					}, 300);
 				};
 
 				bannerAdScript.onerror = () => {
-					console.error('Failed to load banner ad script, retrying...');
-					setTimeout(() => loadAds(isPriority), isPriority ? 500 : 1000); // Faster retry for priority
+					console.error('Failed to load banner ad script');
+					setTimeout(() => loadAds(true), 300);
 				};
 
-				// Append scripts to document
+				// Remove any existing scripts to avoid conflicts
+				document.querySelectorAll('script[src*="effectiveratecpm.com"]').forEach((script) => {
+					script.remove();
+				});
+
+				// Append scripts
 				document.head.appendChild(socialBarScript);
 				document.head.appendChild(bannerAdScript);
 			} catch (error) {
 				console.error('Error loading ad scripts:', error);
-				// Retry after a delay
-				setTimeout(() => loadAds(isPriority), isPriority ? 800 : 1500);
+				setTimeout(() => loadAds(true), 500);
 			}
 		}
+	}
+
+	// Add this function to handle cover image rotation
+	function changeCoverImage() {
+		if (!contents || contents.length === 0) {
+			return overGoddess; // Fallback to default image
+		}
+
+		// Use the current index to get the image
+		const content = contents[currentCoverIndex];
+		return content?.cover_image || overGoddess;
 	}
 </script>
 

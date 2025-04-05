@@ -150,6 +150,11 @@
 
 <div class="min-h-screen bg-gradient-to-b from-gray-900 to-black text-gray-100">
 	<div class="container mx-auto max-w-6xl px-4 py-8">
+		<!-- Social Bar Ad -->
+		<div class="mb-6">
+			{@html `<script type='text/javascript' src='//pl26302165.effectiveratecpm.com/2d/8c/88/2d8c88477fa6d1c610e37670b907ee53.js'><\/script>`}
+		</div>
+
 		{#if isLoading}
 			<div class="rounded-lg border border-gray-700 bg-gray-800 p-6 shadow-lg">
 				<div class="flex h-64 items-center justify-center">
