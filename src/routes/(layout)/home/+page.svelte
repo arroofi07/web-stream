@@ -145,6 +145,9 @@
 	let coverImageInterval: number;
 	let maxImagesToShow = 4; // Limit to first 4 images
 
+	// Add loading state for genre links
+	let loadingGenreId = $state<number | null>(null);
+
 	function changeCoverImage() {
 		if (contents && contents.length > 0) {
 			// Only use the first 4 images (or fewer if there aren't 4 available)
@@ -334,6 +337,16 @@
 		// Update paginated contents
 		updatePaginatedContents();
 	}
+
+	// Function to handle genre navigation with loading
+	async function navigateToGenre(genreId: number) {
+		loadingGenreId = genreId;
+
+		// Short timeout for better responsiveness
+		await new Promise((resolve) => setTimeout(resolve, 200));
+
+		goto(`/genres/${genreId}`);
+	}
 </script>
 
 <div
@@ -506,7 +519,7 @@
 												<div
 													class="h-8 w-8 animate-spin rounded-full border-4 border-white border-t-transparent"
 												></div>
-											</div> 
+											</div>
 										{/if}
 										<div
 											class={`absolute top-2 right-2 rounded-md px-2 py-1 text-xs font-bold text-white ${i % 2 === 0 ? 'bg-green-500' : 'bg-amber-500'}`}
@@ -618,6 +631,7 @@
 					<div
 						class="hover:border-primary dark:hover:border-primary group border-b border-gray-200 pb-2 transition-all duration-300 dark:border-gray-700"
 						in:fly={{ y: 20, duration: 800, delay: 1000 + i * 50 }}
+						onclick={() => navigateToGenre(category.id)}
 					>
 						<div class="flex items-center justify-between">
 							<a
@@ -626,6 +640,11 @@
 							>
 								<span class="text-primary mr-2 font-medium">{i + 1}.</span>
 								{category.name}
+								{#if loadingGenreId === category.id}
+									<span
+										class="border-primary ml-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-t-transparent"
+									></span>
+								{/if}
 							</a>
 							<span class="text-sm text-gray-500 dark:text-gray-400"
 								>{category.contents.length}
