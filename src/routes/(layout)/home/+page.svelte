@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, onDestroy } from 'svelte';
 	import { Button } from '$lib/components/ui/button';
 	import {
 		Card,
@@ -12,8 +12,10 @@
 	import { Input } from '$lib/components/ui/input';
 	import { fade, fly, scale } from 'svelte/transition';
 	import { goto } from '$app/navigation';
-	import { Search, Play, Star } from '@lucide/svelte';
+	import { Search, Play, Star, X } from '@lucide/svelte';
 	import overGoddess from '$lib/assets/cover/tales-of-herding-gods.jpg';
+	import { page } from '$app/stores';
+	import Ongoing from '$lib/components/ongoing.svelte';
 
 	interface typeData {
 		data: {
@@ -82,11 +84,40 @@
 		};
 	}
 
-	// Use $props() for Svelte 5 runes mode
-	let data: typeData = $props();
-	let episodes = data.data.episodes;
-	let contents = data.data.contents;
-	let categories = data.data.categories;
+	// Use $props() for Svelte 5 runes mode and define the correct type
+	let { data } = $props<{ data: any }>();
+
+	// Extract data from props
+	let episodes = data.data?.episodes || [];
+	let contents = data.data?.contents || [];
+	let categories = data.data?.categories || [];
+
+	// Precompute episode map for faster lookups
+	const episodesByContentId = $state(new Map());
+
+	// Get search query from URL using page store
+	let searchQueryFromUrl = $state('');
+
+	// Memoize content filtering for better performance
+	let contentFilterCache = $state(new Map());
+
+	$effect(() => {
+		// Update searchQuery when URL changes
+		const newSearchQuery = $page.url.searchParams.get('search') || '';
+
+		// Only update if the query has changed
+		if (newSearchQuery !== searchQueryFromUrl) {
+			searchQueryFromUrl = newSearchQuery;
+			searchQueryState = newSearchQuery;
+
+			// If search query is empty, reset immediately without searching
+			if (!newSearchQuery) {
+				resetSearch(false);
+			} else {
+				handleSearch();
+			}
+		}
+	});
 
 	// State for animations
 	let isPageLoaded = false;
@@ -105,54 +136,142 @@
 	let paginatedContents = $state<typeof contents>([]);
 
 	// Search functionality
-	let searchQuery = $state('');
+	let searchQueryState = $state(searchQueryFromUrl || '');
 	let filteredContents = $state<typeof contents>([]);
+	let isSearching = $state(false);
+
+	// State for cover image rotation
+	let currentCoverIndex = $state(0);
+	let coverImageInterval: number;
+	let maxImagesToShow = 4; // Limit to first 4 images
+
+	function changeCoverImage() {
+		if (contents && contents.length > 0) {
+			// Only use the first 4 images (or fewer if there aren't 4 available)
+			const availableImages = Math.min(maxImagesToShow, contents.length);
+			return contents[currentCoverIndex % availableImages].cover_image;
+		}
+		return '';
+	}
 
 	onMount(() => {
 		isPageLoaded = true;
-		console.log('Page mounted');
-		filteredContents = [...contents];
-		updatePaginatedContents();
+
+		// Build episode map for faster lookups
+		buildEpisodeMap();
+
+		// Initialize filtered contents - use all contents if no search query
+		if (!searchQueryState) {
+			filteredContents = [...(contents || [])];
+			updatePaginatedContents();
+		} else {
+			handleSearch();
+		}
+
+		// Start rotating cover images every 2 seconds
+		if (contents && contents.length > 0) {
+			coverImageInterval = setInterval(() => {
+				// Only cycle through the first 4 images
+				const availableImages = Math.min(maxImagesToShow, contents.length);
+				currentCoverIndex = (currentCoverIndex + 1) % availableImages;
+			}, 4000);
+		}
 	});
 
-	// Function to handle search
+	onDestroy(() => {
+		if (coverImageInterval) {
+			clearInterval(coverImageInterval);
+		}
+	});
+
+	// Build a map of content_id to episodes for faster lookups
+	function buildEpisodeMap() {
+		episodes.forEach((episode: { content_id: number }) => {
+			if (!episodesByContentId.has(episode.content_id)) {
+				episodesByContentId.set(episode.content_id, []);
+			}
+			episodesByContentId.get(episode.content_id).push(episode);
+		});
+
+		// Pre-sort episodes by id (descending) for each content
+		episodesByContentId.forEach((eps, contentId) => {
+			episodesByContentId.set(
+				contentId,
+				eps.sort((a: { id: number }, b: { id: number }) => b.id - a.id)
+			);
+		});
+	}
+
+	// Function to handle search with debounce
+	let searchTimeout: number;
 	function handleSearch() {
+		// Show searching state immediately
+		isSearching = true;
+
+		// Clear any existing timeout
+		clearTimeout(searchTimeout);
+
+		// Set a timeout to debounce the search
+		searchTimeout = setTimeout(() => {
+			performSearch();
+			isSearching = false;
+		}, 50); // Reduced timeout for faster response
+	}
+
+	// Actual search implementation
+	function performSearch() {
 		// Reset to first page when searching
 		currentPage = 1;
 
-		// Filter contents based on search query
-		if (searchQuery.trim() === '') {
-			filteredContents = [...contents];
+		const query = searchQueryState.trim().toLowerCase();
+
+		// Check if we have cached results for this query
+		if (contentFilterCache.has(query)) {
+			filteredContents = contentFilterCache.get(query);
 		} else {
-			const query = searchQuery.toLowerCase().trim();
-			filteredContents = contents.filter((content) => content.title.toLowerCase().includes(query));
+			// Filter contents based on search query
+			if (!query) {
+				filteredContents = [...(contents || [])];
+			} else {
+				filteredContents = (contents || []).filter((content: { title: string }) =>
+					content.title.toLowerCase().includes(query)
+				);
+			}
+
+			// Cache the results
+			contentFilterCache.set(query, filteredContents);
 		}
 
+		// Update URL with search parameter without page reload
+		const url = new URL(window.location.href);
+		if (query) {
+			url.searchParams.set('search', searchQueryState);
+		} else {
+			url.searchParams.delete('search');
+		}
+		window.history.pushState({}, '', url);
+
+		// Update paginated contents
 		updatePaginatedContents();
 	}
 
-	// Function to update paginated contents
+	// Function to update paginated contents - optimized version
 	function updatePaginatedContents() {
-		// Filter contents that have episodes
-		const contentsWithEpisodes = filteredContents.filter((content) =>
-			episodes.some((ep) => ep.content_id === content.id)
+		// Filter contents that have episodes - use our map for faster lookups
+		const contentsWithEpisodes = filteredContents.filter(
+			(content: { id: number }) =>
+				episodesByContentId.has(content.id) && episodesByContentId.get(content.id).length > 0
 		);
 
-		// Sort by latest episode ID (highest first)
+		// Sort by latest episode ID (highest first) - use our pre-sorted episodes
 		const sortedContents = [...contentsWithEpisodes].sort((a, b) => {
-			const latestEpisodeA = episodes
-				.filter((ep) => ep.content_id === a.id)
-				.sort((x, y) => y.id - x.id)[0];
-
-			const latestEpisodeB = episodes
-				.filter((ep) => ep.content_id === b.id)
-				.sort((x, y) => y.id - x.id)[0];
-
-			return latestEpisodeB?.id - latestEpisodeA?.id;
+			const latestEpisodeA = episodesByContentId.get(a.id)?.[0];
+			const latestEpisodeB = episodesByContentId.get(b.id)?.[0];
+			return (latestEpisodeB?.id || 0) - (latestEpisodeA?.id || 0);
 		});
 
 		// Calculate total pages
-		totalPages = Math.ceil(sortedContents.length / itemsPerPage);
+		totalPages = Math.ceil(sortedContents.length / itemsPerPage) || 1;
 
 		// Get current page items
 		const startIndex = (currentPage - 1) * itemsPerPage;
@@ -178,10 +297,42 @@
 		isLoading = true;
 		loadingContentId = contentId;
 
-		// Short timeout to show loading effect (300ms)
-		await new Promise((resolve) => setTimeout(resolve, 300));
+		// Shorter timeout for better responsiveness
+		await new Promise((resolve) => setTimeout(resolve, 150));
 
 		goto(`/detail/${id}`);
+	}
+
+	// Helper function to get latest episode for a content
+	function getLatestEpisode(contentId: number) {
+		return episodesByContentId.get(contentId)?.[0];
+	}
+
+	// Function to reset search
+	function resetSearch(updateUrl = true) {
+		// Clear search query
+		searchQueryState = '';
+
+		// Reset to first page
+		currentPage = 1;
+
+		// Use cached all contents if available
+		if (contentFilterCache.has('')) {
+			filteredContents = contentFilterCache.get('');
+		} else {
+			filteredContents = [...(contents || [])];
+			contentFilterCache.set('', filteredContents);
+		}
+
+		// Update URL if needed
+		if (updateUrl) {
+			const url = new URL(window.location.href);
+			url.searchParams.delete('search');
+			window.history.pushState({}, '', url);
+		}
+
+		// Update paginated contents
+		updatePaginatedContents();
 	}
 </script>
 
@@ -197,11 +348,16 @@
 			<div
 				class="absolute inset-0 z-10 bg-gradient-to-r from-black/90 via-black/60 to-transparent"
 			></div>
-			<img
-				src={overGoddess}
-				alt="Featured Donghua"
-				class="h-full w-full object-cover transition-transform duration-1000 hover:scale-105"
-			/>
+
+			{#key currentCoverIndex}
+				<img
+					src={changeCoverImage()}
+					alt="Featured Donghua"
+					class="h-full w-full object-cover transition-transform duration-1000 hover:scale-105"
+					in:fade={{ duration: 800 }}
+				/>
+			{/key}
+
 			<div
 				class="absolute bottom-0 left-0 z-10 w-full p-8 md:bottom-20 md:left-16 md:max-w-2xl"
 				in:fly={{ y: 50, duration: 1000, delay: 300 }}
@@ -218,7 +374,7 @@
 							<span
 								class="absolute inset-0 bg-white/20 transition-transform duration-300 group-hover:translate-x-full"
 							></span>
-							<Play class="mr-2 h-5 w-5" /> Mulai Menonton
+							Ayo Nonton Sekarang
 						</Button>
 					</div>
 				</div>
@@ -231,9 +387,9 @@
 					<div class="p-6 text-center">
 						<p class="text-sm">
 							<span class="text-primary mr-2 font-bold">Pasang Iklan:</span>
-							Hubungi
-							<a href="mailto:admin@gmail.com" class="text-primary font-bold hover:underline">
-								admin@gmail.com
+							email
+							<a href="mailto:axeanonym@gmail.com" class="text-primary font-bold hover:underline">
+								axeanonym@gmail.com
 							</a>
 						</p>
 					</div>
@@ -241,68 +397,95 @@
 			</div>
 		</div>
 
-		<!-- Search Section - Redesigned with better positioning and style -->
+		<!-- Search Section with loading indicator -->
 		<div class="relative z-30 -mt-10 mb-20">
-			<div class="relative mx-auto max-w-3xl" in:fade={{ duration: 800, delay: 500 }}>
+			<div class="relative mx-auto max-w-3xl">
 				<div
-					class="border-primary flex items-center overflow-hidden rounded-full border-2 bg-white shadow-xl dark:bg-gray-800"
+					class="group hover:shadow-primary/20 relative flex items-center overflow-hidden rounded-2xl bg-white shadow-2xl transition-all duration-300 dark:bg-gray-800"
 				>
+					<!-- Background animation effect -->
+					<div
+						class="from-primary/5 to-secondary/5 absolute inset-0 bg-gradient-to-r opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+					></div>
+
+					<!-- Left decoration element -->
+					<div
+						class="from-primary to-secondary absolute top-0 left-0 h-full w-2 bg-gradient-to-b opacity-80"
+					></div>
+
 					<Input
 						type="search"
-						placeholder="Cari donghua favoritmu.."
-						class="border-0 px-6 py-6 text-lg focus:ring-0"
-						bind:value={searchQuery}
+						placeholder="Cari donghua favoritmu..."
+						class="z-40  flex-1 border-0 bg-transparent  px-6 py-6 text-lg transition-all focus-visible:outline-none "
+						bind:value={searchQueryState}
 						onkeyup={(e: KeyboardEvent) => e.key === 'Enter' && handleSearch()}
 					/>
-					<Button
-						class="mr-2 flex h-12 w-12 items-center justify-center rounded-full"
-						onclick={handleSearch}
-					>
-						<Search class="h-5 w-5" />
-					</Button>
+
+					<div class="flex items-center pr-3">
+						<Button
+							class="from-primary to-secondary hover:shadow-primary/30 relative mr-2 ml-2 h-12 w-12 overflow-hidden rounded-full bg-gradient-to-br text-white shadow-lg transition-all duration-300"
+							onclick={handleSearch}
+							disabled={isSearching}
+						>
+							<div
+								class="absolute inset-0 bg-white opacity-0 transition-opacity duration-300 hover:opacity-20"
+							></div>
+							{#if isSearching}
+								<div
+									class="h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent"
+								></div>
+							{:else}
+								<Search class="h-5 w-5" />
+							{/if}
+						</Button>
+					</div>
 				</div>
+
+				<!-- Optional floating label effect - uncomment if needed -->
+				<!-- 
+				<div class="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-primary/10 px-4 py-1 text-xs font-medium text-primary dark:bg-primary/20">
+					<span>Temukan berbagai donghua menarik</span>
+				</div>
+				-->
 			</div>
 		</div>
 
-		<!-- Latest Releases Section - New section -->
+		<!-- Latest Releases Section -->
 		<section class="mb-20">
 			<div class="mb-10 flex items-center justify-between">
 				<h2 class="relative text-4xl font-bold">
 					Rilis <span class="text-primary">Terbaru</span>
 					<span class="bg-primary absolute -bottom-2 left-0 h-1 w-24"></span>
 				</h2>
-				<Button variant="ghost" class="text-primary hover:bg-primary/10">View All</Button>
+				<!-- <Button variant="ghost" class="text-primary hover:bg-primary/10">View All</Button> -->
 			</div>
 
-			{#if paginatedContents.length === 0}
+			{#if isSearching}
+				<div class="flex flex-col items-center justify-center py-16 text-center">
+					<div
+						class="border-primary mb-4 h-12 w-12 animate-spin rounded-full border-4 border-t-transparent"
+					></div>
+					<h3 class="mb-2 text-2xl font-bold">Searching...</h3>
+				</div>
+			{:else if paginatedContents.length === 0}
 				<div class="flex flex-col items-center justify-center py-16 text-center">
 					<div class="mb-4 text-5xl">🔍</div>
 					<h3 class="mb-2 text-2xl font-bold">No results found</h3>
 					<p class="text-gray-600 dark:text-gray-400">
-						Kami tidak menemukan konten yang cocok dengan "{searchQuery}"
+						Kami tidak menemukan konten yang cocok dengan "{searchQueryState}"
 					</p>
-					<Button
-						class="mt-6"
-						onclick={() => {
-							searchQuery = '';
-							handleSearch();
-						}}
-					>
-						Reset
-					</Button>
+					<Button class="mt-6" onclick={resetSearch}>Reset</Button>
 				</div>
 			{:else}
 				<div class="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-4">
 					{#each paginatedContents as content, i}
-						{#if episodes.filter((ep) => ep.content_id === content.id).length > 0}
-							{@const latestEpisode = episodes
-								.filter((ep) => ep.content_id === content.id)
-								.sort((a, b) => b.id - a.id)[0]}
+						{@const latestEpisode = getLatestEpisode(content.id)}
+						{#if latestEpisode}
 							<Card
 								class="group overflow-hidden border-none shadow-lg transition-all hover:scale-105 hover:shadow-xl active:scale-75"
-								onmouseenter={() => (hoveredCard = i)}
-								onmouseleave={() => (hoveredCard = -1)}
-								onclick={() => navigateToDetail(latestEpisode.id, content.id)}
+								on:mouseenter={() => (hoveredCard = i)}
+								on:mouseleave={() => (hoveredCard = -1)}
+								on:click={() => navigateToDetail(latestEpisode.id, content.id)}
 							>
 								<div class="flex h-full flex-col">
 									<div class="relative h-48 overflow-hidden">
@@ -382,14 +565,14 @@
 			{/if}
 
 			<!-- Pagination Controls -->
-			{#if totalPages > 1}
+			{#if totalPages > 1 && !isSearching}
 				<div class="mt-8 flex justify-center">
 					<div class="flex items-center space-x-2">
 						<Button
 							variant="outline"
 							size="sm"
 							disabled={currentPage === 1}
-							onclick={() => changePage(currentPage - 1)}
+							on:click={() => changePage(currentPage - 1)}
 							class="px-3"
 						>
 							&lt;
@@ -400,7 +583,7 @@
 							<Button
 								variant={currentPage === pageNumber ? 'default' : 'outline'}
 								size="sm"
-								onclick={() => changePage(pageNumber)}
+								on:click={() => changePage(pageNumber)}
 								class={currentPage === pageNumber ? 'bg-primary text-white' : ''}
 							>
 								{pageNumber}
@@ -411,7 +594,7 @@
 							variant="outline"
 							size="sm"
 							disabled={currentPage === totalPages}
-							onclick={() => changePage(currentPage + 1)}
+							on:click={() => changePage(currentPage + 1)}
 							class="px-3"
 						>
 							&gt;
@@ -438,7 +621,7 @@
 					>
 						<div class="flex items-center justify-between">
 							<a
-								href={`/genre/${category.name.toLowerCase()}`}
+								href={`/genres/${category.id}`}
 								class="hover:text-primary flex items-center text-lg transition-colors duration-300 group-hover:translate-x-1"
 							>
 								<span class="text-primary mr-2 font-medium">{i + 1}.</span>
@@ -461,6 +644,13 @@
 				</Button>
 			</div> -->
 		</section>
+
+		<!-- ongoing donghua -->
+		<Ongoing
+			content={contents}
+			allEpisodes={episodes}
+			containerClass="rounded-lg border mb-10 p-6 shadow-lg backdrop-blur bg-white text-black"
+		/>
 
 		<!-- CTA Section - New section -->
 		<section class="mb-12">

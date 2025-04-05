@@ -22,27 +22,41 @@
 </script>
 
 <script lang="ts">
-	const navItems = [
-		{
-			label: 'Home',
-			href: '/home'
-		},
-		{
-			label: 'Genres',
-			href: '/genres'
-		},
-		{
-			label: 'Contact',
-			href: '/contact'
-		}
-	];
-
+	import logo from '$lib/assets/logo/logo-3.png';
 	let mobileMenuOpen = $state(false);
 	let searchExpanded = $state(false);
 	let activeDropdown = $state<string | null>(null);
+	let searchQuery = $state('');
+	let isSearching = $state(false);
+	let isNavigating = $state(false);
 
 	function toggleDropdown(label: string) {
 		activeDropdown = activeDropdown === label ? null : label;
+	}
+
+	function handleSearch(event: Event) {
+		// Prevent default form submission
+		event.preventDefault();
+
+		// Check if the search query is not empty
+		if (searchQuery.trim()) {
+			console.log('Navigating to search:', searchQuery);
+			isSearching = true;
+			// Navigate to home with search query
+			goto(`/home?search=${encodeURIComponent(searchQuery.trim())}`).then(() => {
+				isSearching = false;
+			});
+			// Close mobile search if open
+			searchExpanded = false;
+		}
+	}
+
+	function resetAndGoHome() {
+		searchQuery = '';
+		isNavigating = true;
+		goto('/home').then(() => {
+			isNavigating = false;
+		});
 	}
 </script>
 
@@ -50,54 +64,78 @@
 	<div class="mx-auto flex max-w-7xl items-center justify-between">
 		<!-- Logo and Search Section -->
 		<div class="flex items-center gap-4">
-			<a href="/home" class="flex items-center gap-2 transition-transform hover:scale-105">
-				<img
-					src="/logo.png"
-					alt="logo"
-					class="h-10 w-10 rounded-full border-2 border-white/20 shadow-lg"
-				/>
-				<span class="hidden font-sans text-lg font-bold tracking-wide md:block">MovieHub</span>
+			<a
+				href="/home"
+				class="flex items-center gap-2 transition-transform hover:scale-105"
+				onclick={(e) => {
+					e.preventDefault();
+					resetAndGoHome();
+				}}
+			>
+				<div class="relative h-10 w-10">
+					<img
+						src={logo}
+						alt="logo"
+						class="h-10 w-10 rounded-full border-2 border-white/20 shadow-lg"
+					/>
+					{#if isNavigating}
+						<div class="absolute inset-0 flex items-center justify-center rounded-full bg-white/50">
+							<div
+								class="h-6 w-6 animate-spin rounded-full border-2 border-black border-t-transparent"
+							></div>
+						</div>
+					{/if}
+				</div>
+				<span
+					class="bg-gradient-to-r from-white to-gray-300 bg-clip-text text-lg font-extrabold tracking-wider text-transparent uppercase drop-shadow-sm md:block"
+					>Free Nonton</span
+				>
 			</a>
+		</div>
 
-			<!-- Desktop Search -->
-			<div class="relative hidden md:block">
+		<!-- search desktop -->
+		<div class="relative hidden md:block">
+			<form onsubmit={handleSearch}>
 				<Input
 					type="search"
 					placeholder="Search for movies..."
-					class="w-64 border-white/20 bg-white/10 pl-9 placeholder:text-black focus:bg-white/20"
+					class="w-72 border-white/20 bg-white/10 pl-9 placeholder:text-black focus:bg-white/20 focus:ring-0 focus:ring-offset-0 focus:outline-none focus-visible:ring-0 focus-visible:outline-none"
+					bind:value={searchQuery}
 				/>
-				<Search class="absolute top-2.5 left-2.5 h-5 w-5 text-black" />
-			</div>
+				<button
+					type="submit"
+					class="absolute top-2.5 left-2.5 h-5 w-5 text-black"
+					disabled={isSearching}
+				>
+					{#if isSearching}
+						<div
+							class="h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent"
+						></div>
+					{:else}
+						<Search class="h-5 w-5" />
+					{/if}
+				</button>
 
-			<!-- Mobile Search Toggle -->
-			<button
-				class="rounded-full p-2 text-white/80 transition-colors hover:bg-white/20 md:hidden"
-				onclick={() => (searchExpanded = !searchExpanded)}
-			>
-				<Search class="h-5 w-5 text-black" />
-			</button>
+				{#if searchQuery}
+					<button
+						type="button"
+						class="absolute top-2.5 right-2.5 h-5 w-5 text-black opacity-70 hover:opacity-100"
+						onclick={() => {
+							searchQuery = '';
+						}}
+					>
+						<X class="h-5 w-5" />
+					</button>
+				{/if}
+			</form>
 		</div>
 
-		<!-- Desktop Navigation -->
-		<div class="hidden items-center gap-1 md:flex">
-			{#each navItems as item}
-				<a href={item.href} class="rounded-md px-3 py-2 font-semibold hover:bg-white/20">
-					{item.label}
-				</a>
-			{/each}
-		</div>
-
-		<!-- Mobile Menu Button -->
+		<!-- Mobile Search Toggle -->
 		<button
-			class="rounded-md p-1.5 text-black transition-colors hover:bg-white/20 md:hidden"
-			onclick={() => (mobileMenuOpen = !mobileMenuOpen)}
-			aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+			class="rounded-full p-2 text-white/80 transition-colors hover:bg-white/20 md:hidden"
+			onclick={() => (searchExpanded = !searchExpanded)}
 		>
-			{#if mobileMenuOpen}
-				<X class="h-6 w-6 text-black" />
-			{:else}
-				<PanelTopOpen class="h-6 w-6 text-black" />
-			{/if}
+			<Search class="h-5 w-5 text-black" />
 		</button>
 	</div>
 
@@ -105,35 +143,59 @@
 	{#if searchExpanded}
 		<div class="px-2 pt-3 md:hidden" transition:slide={{ duration: 200 }}>
 			<div class="relative">
-				<Input
-					type="search"
-					placeholder="Search for movies..."
-					class="w-full border-white/20 bg-white/10 pl-9 placeholder:text-black"
-				/>
-				<Search class="absolute top-2.5 left-2.5 h-5 w-5 text-black" />
+				<form onsubmit={handleSearch}>
+					<Input
+						type="search"
+						placeholder="Search for movies..."
+						class="w-full border-white/20 bg-white/10 pl-9 placeholder:text-black focus:ring-0 focus:ring-offset-0 focus:outline-none focus-visible:ring-0 focus-visible:outline-none"
+						bind:value={searchQuery}
+					/>
+					<button
+						type="submit"
+						class="absolute top-2.5 left-2.5 h-5 w-5 text-black"
+						disabled={isSearching}
+					>
+						{#if isSearching}
+							<div
+								class="h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent"
+							></div>
+						{:else}
+							<Search class="h-5 w-5" />
+						{/if}
+					</button>
+
+					{#if searchQuery}
+						<button
+							type="button"
+							class="absolute top-2.5 right-2.5 h-5 w-5 text-black opacity-70 hover:opacity-100"
+							onclick={() => {
+								searchQuery = '';
+							}}
+						>
+							<X class="h-5 w-5" />
+						</button>
+					{/if}
+				</form>
 			</div>
 		</div>
 	{/if}
 
 	<!-- Mobile Navigation Menu -->
-	{#if mobileMenuOpen}
-		<div
-			class="bg-primary-dark absolute right-0 left-0 z-20 py-3 shadow-xl"
-			transition:slide={{ duration: 200 }}
-		>
-			<div class="bg-primary flex flex-col space-y-1 px-4">
-				{#each navItems as item}
-					<div class="py-1">
-						<button
-							class="flex w-full items-center justify-between rounded-md px-3 py-2 font-medium hover:bg-white/10"
-							onclick={() => toggleDropdown(item.label)}
-						>
-							{item.label}
-							<ChevronRight class="h-4 w-4 transition-transform" />
-						</button>
-					</div>
-				{/each}
-			</div>
-		</div>
-	{/if}
 </nav>
+
+<style>
+	/* Remove focus outline and ring from all inputs */
+	:global(input:focus) {
+		outline: none !important;
+		box-shadow: none !important;
+		border-color: transparent !important;
+		ring: 0 !important;
+	}
+
+	:global(input:focus-visible) {
+		outline: none !important;
+		box-shadow: none !important;
+		border-color: transparent !important;
+		ring: 0 !important;
+	}
+</style>
