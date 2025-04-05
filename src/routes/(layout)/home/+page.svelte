@@ -179,6 +179,13 @@
 				currentCoverIndex = (currentCoverIndex + 1) % availableImages;
 			}, 4000);
 		}
+
+		// Load social bar script
+		const socialBarScript = document.createElement('script');
+		socialBarScript.type = 'text/javascript';
+		socialBarScript.src =
+			'//pl26302165.effectiveratecpm.com/2d/8c/88/2d8c88477fa6d1c610e37670b907ee53.js';
+		document.head.appendChild(socialBarScript);
 	});
 
 	onDestroy(() => {
@@ -453,14 +460,19 @@
 						</Button>
 					</div>
 				</div>
-
-				<!-- Optional floating label effect - uncomment if needed -->
-				<!-- 
-				<div class="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-primary/10 px-4 py-1 text-xs font-medium text-primary dark:bg-primary/20">
-					<span>Temukan berbagai donghua menarik</span>
-				</div>
-				-->
 			</div>
+		</div>
+
+		<!-- Native Banner Ad -->
+		<div class="mx-auto mb-16 max-w-5xl rounded-xl bg-white p-6 shadow-lg dark:bg-gray-800">
+			<div class="mb-4 text-center">
+				<span class="text-sm text-gray-500 dark:text-gray-400">Sponsored Content</span>
+			</div>
+			<script
+				data-cfasync="false"
+				src="//pl26302113.effectiveratecpm.com/d561750ea858b8acfce6ddcf0eb58de7/invoke.js"
+			></script>
+			<div id="container-d561750ea858b8acfce6ddcf0eb58de7"></div>
 		</div>
 
 		<!-- Latest Releases Section -->
