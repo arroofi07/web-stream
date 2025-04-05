@@ -603,17 +603,20 @@
 					</p>
 					<div class="flex flex-wrap gap-4 pt-4">
 						<Button size="lg" class="bg-primary hover:bg-primary/90 group relative overflow-hidden">
-							<span
-								class="absolute inset-0 bg-white/20 transition-transform duration-300 group-hover:translate-x-full"
-							></span>
-							Ayo Nonton Sekarang
+							<a
+								href="https://www.effectiveratecpm.com/rn1sbgwa5z?key=ca5ea637b5bdf5bcefed785dbcee3505"
+								target="_blank"
+								rel="noopener noreferrer"
+							>
+								Ayo Nonton Sekarang
+							</a>
 						</Button>
 					</div>
 				</div>
 			</div>
 		</section>
 
-		<div class="relative z-30 -mt-20 mb-20">
+		<div class="relative z-30 -mt-20 mb-7">
 			<div class="mx-auto">
 				<div class="overflow-hidden rounded-xl bg-white shadow-xl dark:bg-gray-800">
 					<div class="p-6 text-center">
@@ -627,6 +630,24 @@
 					</div>
 				</div>
 			</div>
+		</div>
+
+		<!-- Native Banner Ad -->
+		<div class="ad-container mx-auto mb-16 rounded-xl bg-white p-6 shadow-lg dark:bg-gray-800">
+			<div class="mb-4 text-center">
+				<span class="text-sm text-gray-500 dark:text-gray-400">Sponsored Content</span>
+			</div>
+
+			{#if !adLoaded}
+				<div class="flex items-center justify-center py-8">
+					<div
+						class="border-primary h-8 w-8 animate-spin rounded-full border-4 border-t-transparent"
+					></div>
+					<span class="ml-3 text-gray-600 dark:text-gray-400">Loading advertisement...</span>
+				</div>
+			{/if}
+
+			<div id="container-d561750ea858b8acfce6ddcf0eb58de7"></div>
 		</div>
 
 		<!-- Search Section with loading indicator -->
@@ -884,9 +905,7 @@
 		/>
 
 		<!-- Native Banner Ad -->
-		<div
-			class="ad-container mx-auto mb-16  rounded-xl bg-white p-6 shadow-lg dark:bg-gray-800"
-		>
+		<div class="ad-container mx-auto mb-16 rounded-xl bg-white p-6 shadow-lg dark:bg-gray-800">
 			<div class="mb-4 text-center">
 				<span class="text-sm text-gray-500 dark:text-gray-400">Sponsored Content</span>
 			</div>
