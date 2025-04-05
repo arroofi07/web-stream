@@ -601,5 +601,16 @@
 				</div>
 			</div>
 		{/if}
+
+		<!-- Native Banner Ad at the bottom -->
+		<div
+			class="mx-auto mt-6 mb-16 w-full rounded-xl border border-gray-700 bg-gray-800/50 p-6 shadow-lg backdrop-blur"
+		>
+			<div class="mb-4 text-center">
+				<span class="text-sm text-gray-400">Sponsored Content</span>
+			</div>
+			{@html `<script async="async" data-cfasync="false" src="//pl26302113.effectiveratecpm.com/d561750ea858b8acfce6ddcf0eb58de7/invoke.js"><\/script>
+			<div id="container-d561750ea858b8acfce6ddcf0eb58de7"></div>`}
+		</div>
 	</div>
 </div>

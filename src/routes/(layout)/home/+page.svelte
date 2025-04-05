@@ -675,26 +675,6 @@
 			</div>
 		</div>
 
-		<!-- Native Banner Ad -->
-		<div
-			class="ad-container mx-auto mb-16 max-w-5xl rounded-xl bg-white p-6 shadow-lg dark:bg-gray-800"
-		>
-			<div class="mb-4 text-center">
-				<span class="text-sm text-gray-500 dark:text-gray-400">Sponsored Content</span>
-			</div>
-
-			{#if !adLoaded}
-				<div class="flex items-center justify-center py-8">
-					<div
-						class="border-primary h-8 w-8 animate-spin rounded-full border-4 border-t-transparent"
-					></div>
-					<span class="ml-3 text-gray-600 dark:text-gray-400">Loading advertisement...</span>
-				</div>
-			{/if}
-
-			<div id="container-d561750ea858b8acfce6ddcf0eb58de7"></div>
-		</div>
-
 		<!-- Latest Releases Section -->
 		<section class="mb-20">
 			<div class="mb-10 flex items-center justify-between">
@@ -902,6 +882,26 @@
 			allEpisodes={episodes}
 			containerClass="rounded-lg border mb-10 p-6 shadow-lg backdrop-blur bg-white text-black"
 		/>
+
+		<!-- Native Banner Ad -->
+		<div
+			class="ad-container mx-auto mb-16  rounded-xl bg-white p-6 shadow-lg dark:bg-gray-800"
+		>
+			<div class="mb-4 text-center">
+				<span class="text-sm text-gray-500 dark:text-gray-400">Sponsored Content</span>
+			</div>
+
+			{#if !adLoaded}
+				<div class="flex items-center justify-center py-8">
+					<div
+						class="border-primary h-8 w-8 animate-spin rounded-full border-4 border-t-transparent"
+					></div>
+					<span class="ml-3 text-gray-600 dark:text-gray-400">Loading advertisement...</span>
+				</div>
+			{/if}
+
+			<div id="container-d561750ea858b8acfce6ddcf0eb58de7"></div>
+		</div>
 
 		<!-- Footer Button -->
 		<div class="mb-8 text-center">
