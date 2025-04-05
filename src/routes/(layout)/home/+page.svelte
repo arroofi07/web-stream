@@ -367,7 +367,7 @@
 						Dunia <span class="text-primary">Donghua</span> yang Luar Biasa
 					</h1>
 					<p class="text-lg text-gray-200 md:text-xl">
-						Rasakan keajaiban animasi dengan kualitas HD yang memukau.
+						Ayo nikmati tontonan berkualitas dengan resolusi tinggi dari berbagai donghua.
 					</p>
 					<div class="flex flex-wrap gap-4 pt-4">
 						<Button size="lg" class="bg-primary hover:bg-primary/90 group relative overflow-hidden">
@@ -506,7 +506,7 @@
 												<div
 													class="h-8 w-8 animate-spin rounded-full border-4 border-white border-t-transparent"
 												></div>
-											</div>
+											</div> 
 										{/if}
 										<div
 											class={`absolute top-2 right-2 rounded-md px-2 py-1 text-xs font-bold text-white ${i % 2 === 0 ? 'bg-green-500' : 'bg-amber-500'}`}

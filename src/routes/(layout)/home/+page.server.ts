@@ -31,7 +31,6 @@ export const load: PageServerLoad = async ({ url, fetch }: any) => {
 		// console.log('Contents count:', dataContents.data?.length || 0);
 		// console.log('Episodes count:', dataEpisodes.data?.length || 0);
 		// console.log('Categories count:', dataCategories?.length || 0);
-
 		return {
 			data: {
 				contents: dataContents.data || [],

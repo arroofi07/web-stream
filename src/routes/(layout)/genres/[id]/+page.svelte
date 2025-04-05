@@ -20,7 +20,27 @@
 		pivot?: any;
 	}
 
-	interface Category {
+	interface Episode {
+		id: number;
+		content_id: number;
+		title: string;
+		episode_number: number;
+		description: string;
+		duration: number;
+		release_date: string;
+		content: Content;
+		streaming_links: Array<{
+			id: number;
+			episode_id: number;
+			server_name: string;
+			quality: string;
+			url: string;
+			is_active: boolean;
+		}>;
+		created_at: string;
+		updated_at: string;
+	}
+	interface Genre {
 		id: number;
 		name: string;
 		description: string;
@@ -29,17 +49,38 @@
 		contents: Content[];
 	}
 
-	export let data: PageData;
+	let { data } = $props<{ data: any }>();
 
-	// Extract data from the API response
-	const genre: Category = data.genre;
-	const allContents: Content[] = data.allContents.data;
+	// More detailed debugging
+	$inspect('Full data object:', data);
+	$inspect('data.data:', data.data);
+	$inspect('data.data.genre:', data.data.genre);
+	$inspect('data.data.allContents:', data.data.allContents);
 
-	// Get content IDs from the genre
-	const genreContentIds = genre.contents.map((content) => content.id);
+	// Extract data from the API response based on the actual structure
+	const genre: Genre = data.data.genre;
+	const allContents: Content[] = data.data.allContents || [];
+	const episodes: Episode[] = data.data.episodes || [];
 
-	// Filter contents that match the genre content IDs
-	$: filteredContents = allContents.filter((content) => genreContentIds.includes(content.id));
+	// If genre is undefined, try to create a placeholder from the URL
+	let genreName = '';
+	if (!genre) {
+		// Try to extract genre name from URL
+		const urlParts = window.location.pathname.split('/');
+		const genreId = urlParts[urlParts.length - 1];
+		genreName = decodeURIComponent(genreId);
+	}
+
+	$inspect('Genre:', genre);
+	$inspect('Genre contents:', genre?.contents);
+
+	// Extract content IDs from genre.contents
+	const genreContentIds = genre?.contents?.map((content) => content.id) || [];
+
+	// Filter allContents to match the content IDs in genre.contents
+	const filteredContents = $derived(
+		allContents.filter((content) => genreContentIds.includes(content.id))
+	);
 
 	// Format date function
 	function formatDate(dateString: string): string {
@@ -56,12 +97,17 @@
 </script>
 
 <svelte:head>
-	<title>{genre.name} | Donghua App</title>
-	<meta name="description" content="Browse content in the {genre.name} category" />
+	{#if genre}
+		<title>{genre.name} | Donghua App</title>
+		<meta name="description" content="Browse content in the {genre.name} category" />
+	{:else}
+		<title>Genre | Donghua App</title>
+		<meta name="description" content="Browse content by genre" />
+	{/if}
 </svelte:head>
 
 <!-- Enhanced Hero banner section with parallax effect -->
-<div class="relative mb-16 overflow-hidden bg-gradient-to-br from-gray-900 to-gray-800">
+<div class="relative mb-8 overflow-hidden bg-gradient-to-br from-gray-900 to-gray-800 md:mb-16">
 	<!-- Animated background pattern -->
 	<div class="absolute inset-0 opacity-20">
 		<div class="parallax-bg">
@@ -78,33 +124,36 @@
 		</div>
 	</div>
 
-	<div class="relative container mx-auto px-4 py-24">
+	<div class="relative container mx-auto px-4 py-12 md:py-24">
 		<div class="max-w-2xl">
 			<div
-				class="bg-primary/30 text-primary mb-4 inline-block rounded-full px-6 py-2 text-sm font-medium backdrop-blur-sm"
+				class="bg-primary/30 text-primary mb-4 inline-block rounded-full px-4 py-1.5 text-xs font-medium backdrop-blur-sm sm:px-6 sm:py-2 sm:text-sm"
 				in:fade={{ duration: 400, delay: 150 }}
 			>
 				Explore Genre
 			</div>
 			<h1
-				class="mb-6 text-5xl font-extrabold tracking-tight text-white md:text-6xl"
+				class="mb-4 text-3xl font-extrabold tracking-tight text-white sm:text-4xl md:mb-6 md:text-5xl lg:text-6xl"
 				in:fade={{ duration: 400, delay: 250 }}
 			>
 				<span
-					class="from-primary to-primary-light bg-gradient-to-r bg-clip-text text-primary capitalize"
-					>{genre.name}</span
+					class="from-primary to-primary-light text-primary bg-gradient-to-r bg-clip-text capitalize"
+					>{genre?.name || 'Genre'}</span
 				>
 			</h1>
-			<div class="flex flex-wrap items-center gap-3" in:fade={{ duration: 400, delay: 450 }}>
+			<div
+				class="flex flex-wrap items-center gap-2 sm:gap-3"
+				in:fade={{ duration: 400, delay: 450 }}
+			>
 				<div
-					class="rounded-full bg-gray-800/70 px-5 py-2.5 text-sm font-medium text-white shadow-lg backdrop-blur-sm"
+					class="rounded-full bg-gray-800/70 px-3 py-1.5 text-xs font-medium text-white shadow-lg backdrop-blur-sm sm:px-5 sm:py-2.5 sm:text-sm"
 				>
 					<span class="text-primary font-bold">{filteredContents.length}</span> Content
 				</div>
 				<div
-					class="rounded-full bg-gray-800/70 px-5 py-2.5 text-sm font-medium text-white shadow-lg backdrop-blur-sm"
+					class="rounded-full bg-gray-800/70 px-3 py-1.5 text-xs font-medium text-white shadow-lg backdrop-blur-sm sm:px-5 sm:py-2.5 sm:text-sm"
 				>
-					<span class="text-primary font-bold">{genre.name}</span> Genre
+					Genre <span class="text-primary font-bold">{genre?.name || 'Genre'}</span>
 				</div>
 			</div>
 		</div>
@@ -115,26 +164,26 @@
 	<div class="bg-primary/20 absolute top-20 -right-20 h-40 w-40 rounded-full blur-3xl"></div>
 </div>
 
-<section class="container mx-auto px-4 pb-24">
+<section class="container mx-auto px-4 pb-12 md:pb-24">
 	<!-- Enhanced filtering and view controls -->
 	<div
-		class="mb-10 flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-gray-100/50 p-4 shadow-sm backdrop-blur-sm dark:bg-gray-800/50"
+		class="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl bg-gray-100/50 p-3 shadow-sm backdrop-blur-sm md:mb-10 md:rounded-2xl md:p-4 dark:bg-gray-800/50"
 	>
 		<div class="flex items-center">
-			<h2 class="text-xl font-bold">
+			<h2 class="text-base font-bold md:text-xl">
 				Showing <span class="text-primary font-extrabold">{filteredContents.length}</span> results
 			</h2>
 		</div>
 
-		<div class="flex items-center space-x-3">
+		<div class="flex items-center space-x-2 md:space-x-3">
 			<Button
-				class={`flex h-12 w-12 items-center justify-center rounded-xl transition-all duration-300 ${viewMode === 'grid' ? 'bg-primary shadow-primary/30 text-white shadow-lg' : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300'}`}
+				class={`flex h-10 w-10 items-center justify-center rounded-lg transition-all duration-300 md:h-12 md:w-12 md:rounded-xl ${viewMode === 'grid' ? 'bg-primary shadow-primary/30 text-white shadow-lg' : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300'}`}
 				on:click={() => (viewMode = 'grid')}
 			>
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
-					width="20"
-					height="20"
+					width="18"
+					height="18"
 					viewBox="0 0 24 24"
 					fill="none"
 					stroke="currentColor"
@@ -149,13 +198,13 @@
 				</svg>
 			</Button>
 			<Button
-				class={`flex h-12 w-12 items-center justify-center rounded-xl transition-all duration-300 ${viewMode === 'list' ? 'bg-primary shadow-primary/30 text-white shadow-lg' : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300'}`}
+				class={`flex h-10 w-10 items-center justify-center rounded-lg transition-all duration-300 md:h-12 md:w-12 md:rounded-xl ${viewMode === 'list' ? 'bg-primary shadow-primary/30 text-white shadow-lg' : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300'}`}
 				on:click={() => (viewMode = 'list')}
 			>
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
-					width="20"
-					height="20"
+					width="18"
+					height="18"
 					viewBox="0 0 24 24"
 					fill="none"
 					stroke="currentColor"
@@ -177,177 +226,133 @@
 	{#if filteredContents.length > 0}
 		{#if viewMode === 'grid'}
 			<div
-				class="grid grid-cols-2 gap-8 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
+				class="xs:grid-cols-2 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 md:grid-cols-3 md:gap-8 lg:grid-cols-4 xl:grid-cols-5"
 				in:fade={{ duration: 300, delay: 150 }}
 			>
 				{#each filteredContents as content, i (content.id)}
 					<div
-						class="group hover:shadow-primary/10 relative overflow-hidden rounded-2xl bg-white shadow-xl transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl dark:bg-gray-800"
+						class="group hover:shadow-primary/10 relative overflow-hidden rounded-xl bg-white shadow-xl transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl md:rounded-2xl dark:bg-gray-800"
 						in:fly={{ y: 20, duration: 300, delay: 100 + i * 50 }}
 					>
 						<div class="flex h-full flex-col">
-							<div class="relative aspect-[3/4] overflow-hidden rounded-t-2xl">
+							<div class="relative aspect-[2/3] overflow-hidden">
 								<img
-									src={content.cover_image}
+									src={content.thumbnail}
 									alt={content.title}
-									class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+									class="h-full w-full object-cover transition-all duration-500 group-hover:scale-110"
 								/>
-								<!-- Enhanced gradient overlay -->
 								<div
-									class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-80"
+									class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-80"
 								></div>
-
-								<div
-									class="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity duration-500 group-hover:opacity-100"
-								>
-									<div
-										class="bg-primary/80 transform rounded-full p-4 backdrop-blur-sm transition-transform duration-500 group-hover:scale-110 hover:scale-125"
-									>
-										<svg
-											xmlns="http://www.w3.org/2000/svg"
-											class="h-10 w-10 text-white"
-											viewBox="0 0 24 24"
-											fill="none"
-											stroke="currentColor"
-											stroke-width="2"
-											stroke-linecap="round"
-											stroke-linejoin="round"
+								<div class="absolute bottom-0 left-0 w-full p-4">
+									<h3 class="mb-1 text-lg font-bold text-white md:text-xl">{content.title}</h3>
+									<div class="flex flex-wrap gap-2">
+										<span
+											class="inline-flex items-center rounded-full bg-gray-800/70 px-2.5 py-0.5 text-xs font-medium text-white backdrop-blur-sm"
 										>
-											<polygon points="5 3 19 12 5 21 5 3"></polygon>
-										</svg>
+											{content.status}
+										</span>
+										<span
+											class="inline-flex items-center rounded-full bg-gray-800/70 px-2.5 py-0.5 text-xs font-medium text-white backdrop-blur-sm"
+										>
+											{content.total_episodes} Episodes
+										</span>
 									</div>
 								</div>
-
-								<!-- Status badge -->
-								<div
-									class="absolute top-3 right-3 rounded-full bg-gradient-to-r from-green-500 to-green-600 px-3 py-1 text-xs font-bold text-white shadow-lg"
-								>
-									{content.status}
-								</div>
-
-								<!-- Origin badge -->
-								<div
-									class="absolute top-3 left-3 rounded-full bg-gray-800/80 px-3 py-1 text-xs font-bold text-white shadow-lg backdrop-blur-sm"
-								>
-									{content.country_origin === 'china' ? 'Donghua' : 'Anime'}
-								</div>
-
-								<!-- Episode count -->
-								<div
-									class="from-primary to-primary-dark absolute bottom-3 left-3 rounded-full bg-gradient-to-r px-3 py-1 text-xs font-medium text-white shadow-lg"
-								>
-									{content.total_episodes} Episode{content.total_episodes > 1 ? 's' : ''}
-								</div>
 							</div>
-
-							<div class="flex-1 p-5">
-								<h3
-									class="group-hover:text-primary mb-2 line-clamp-1 text-lg font-bold transition-colors duration-300"
-								>
-									{content.title}
-								</h3>
-								<p class="mb-3 text-sm font-medium text-gray-600 dark:text-gray-400">
-									Subtitle Indonesia
+							<div class="p-4">
+								<p class="mb-4 line-clamp-2 text-sm text-gray-600 dark:text-gray-300">
+									{content.description}
 								</p>
-								<div class="mb-5 flex items-center">
-									<svg
-										xmlns="http://www.w3.org/2000/svg"
-										class="mr-1 h-4 w-4 text-gray-500"
-										fill="none"
-										viewBox="0 0 24 24"
-										stroke="currentColor"
-									>
-										<path
-											stroke-linecap="round"
-											stroke-linejoin="round"
-											stroke-width="2"
-											d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-										/>
-									</svg>
-									<span class="text-xs text-gray-500">
+								<div class="flex items-center justify-between">
+									<span class="text-xs text-gray-500 dark:text-gray-400">
 										{formatDate(content.release_date)}
 									</span>
+
+									{#if episodes.some((episode) => episode.content_id === content.id)}
+										{@const matchingEpisode = episodes.find(
+											(episode) => episode.content_id === content.id
+										)}
+										<a
+											href={`/detail/${matchingEpisode?.id}`}
+											class="from-primary to-primary-light inline-flex items-center rounded-full bg-gradient-to-r px-3 py-1 text-xs font-medium text-white shadow-sm transition-all duration-300 hover:shadow-md"
+										>
+											Watch
+										</a>
+									{:else}
+										<span
+											class="inline-flex items-center rounded-full bg-gray-200 px-3 py-1 text-xs font-medium text-gray-700 dark:bg-gray-700 dark:text-gray-300"
+										>
+											Coming Soon
+										</span>
+									{/if}
 								</div>
-								<a
-									href={`/detail/${content.id}`}
-									class="from-primary to-primary-dark hover:from-primary-dark hover:to-primary hover:shadow-primary/30 block w-full rounded-xl bg-gradient-to-r px-4 py-3 text-center text-white transition-all duration-300 hover:shadow-lg"
-								>
-									Watch Now
-								</a>
 							</div>
 						</div>
 					</div>
 				{/each}
 			</div>
 		{:else}
-			<div class="space-y-6" in:fade={{ duration: 300, delay: 150 }}>
+			<div class="space-y-4 md:space-y-6" in:fade={{ duration: 300, delay: 150 }}>
 				{#each filteredContents as content, i (content.id)}
 					<div
-						class="group hover:shadow-primary/20 flex overflow-hidden rounded-2xl bg-white shadow-lg transition-all duration-300 hover:-translate-x-1 hover:translate-y-0 hover:shadow-xl dark:bg-gray-800"
+						class="group hover:shadow-primary/20 flex flex-col overflow-hidden rounded-xl bg-white shadow-lg transition-all duration-300 hover:-translate-x-1 hover:translate-y-0 hover:shadow-xl sm:flex-row md:rounded-2xl dark:bg-gray-800"
 						in:fly={{ y: 20, duration: 300, delay: 100 + i * 50 }}
 					>
-						<div class="relative h-40 w-32 overflow-hidden rounded-l-2xl sm:h-56 sm:w-40">
+						<div class="relative h-48 w-full overflow-hidden sm:h-auto sm:w-1/3 md:w-1/4">
 							<img
-								src={content.cover_image}
+								src={content.thumbnail}
 								alt={content.title}
-								class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+								class="h-full w-full object-cover transition-all duration-500 group-hover:scale-110"
 							/>
 							<div
-								class="absolute top-3 right-3 rounded-full bg-gradient-to-r from-green-500 to-green-600 px-2 py-1 text-xs font-bold text-white shadow-md"
-							>
-								{content.status}
-							</div>
+								class="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+							></div>
 						</div>
-
-						<div class="flex flex-1 flex-col p-6">
-							<div class="mb-3 flex items-center gap-3">
-								<div
-									class="rounded-full bg-gray-200 px-3 py-1.5 text-xs font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-200"
+						<div class="flex flex-1 flex-col p-4 sm:p-6">
+							<h3 class="mb-2 text-xl font-bold md:text-2xl">{content.title}</h3>
+							<div class="mb-3 flex flex-wrap gap-2">
+								<span
+									class="inline-flex items-center rounded-full bg-gray-200 px-2.5 py-0.5 text-xs font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-200"
 								>
-									{content.country_origin === 'china' ? 'Donghua' : 'Anime'}
-								</div>
-								<div
-									class="bg-primary/10 text-primary rounded-full px-3 py-1.5 text-xs font-medium"
+									{content.status}
+								</span>
+								<span
+									class="inline-flex items-center rounded-full bg-gray-200 px-2.5 py-0.5 text-xs font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-200"
 								>
 									{content.total_episodes} Episodes
-								</div>
-							</div>
-
-							<h3
-								class="group-hover:text-primary mb-3 text-xl font-bold transition-colors duration-300 sm:text-2xl"
-							>
-								{content.title}
-							</h3>
-
-							<p class="mb-3 text-sm text-gray-600 dark:text-gray-400">Subtitle Indonesia</p>
-
-							<div class="mb-5 flex items-center">
-								<svg
-									xmlns="http://www.w3.org/2000/svg"
-									class="mr-1 h-4 w-4 text-gray-500"
-									fill="none"
-									viewBox="0 0 24 24"
-									stroke="currentColor"
+								</span>
+								<span
+									class="inline-flex items-center rounded-full bg-gray-200 px-2.5 py-0.5 text-xs font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-200"
 								>
-									<path
-										stroke-linecap="round"
-										stroke-linejoin="round"
-										stroke-width="2"
-										d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-									/>
-								</svg>
-								<span class="text-xs text-gray-500">
-									{formatDate(content.release_date)}
+									{content.country_origin}
 								</span>
 							</div>
+							<p class="mb-4 flex-1 text-sm text-gray-600 dark:text-gray-300">
+								{content.description}
+							</p>
+							<div class="flex items-center justify-between">
+								<span class="text-xs text-gray-500 dark:text-gray-400">
+									{formatDate(content.release_date)}
+								</span>
 
-							<div class="mt-auto">
-								<a
-									href={`/detail/${content.id}`}
-									class="from-primary to-primary-dark hover:from-primary-dark hover:to-primary hover:shadow-primary/30 inline-block rounded-xl bg-gradient-to-r px-8 py-3 text-center text-white transition-all duration-300 hover:shadow-lg"
-								>
-									Watch Now
-								</a>
+								{#if episodes.some((episode) => episode.content_id === content.id)}
+									{@const matchingEpisode = episodes.find(
+										(episode) => episode.content_id === content.id
+									)}
+									<a
+										href={`/detail/${matchingEpisode?.id}`}
+										class="from-primary to-primary-light inline-flex items-center rounded-full bg-gradient-to-r px-4 py-1.5 text-sm font-medium text-white shadow-sm transition-all duration-300 hover:shadow-md"
+									>
+										Watch Now
+									</a>
+								{:else}
+									<span
+										class="inline-flex items-center rounded-full bg-gray-200 px-4 py-1.5 text-sm font-medium text-gray-700 dark:bg-gray-700 dark:text-gray-300"
+									>
+										Coming Soon
+									</span>
+								{/if}
 							</div>
 						</div>
 					</div>
@@ -356,13 +361,13 @@
 		{/if}
 	{:else}
 		<div
-			class="flex flex-col items-center justify-center rounded-2xl bg-white py-20 text-center shadow-xl dark:bg-gray-800"
+			class="flex flex-col items-center justify-center rounded-xl bg-white py-12 text-center shadow-xl md:rounded-2xl md:py-20 dark:bg-gray-800"
 			in:fade={{ duration: 300, delay: 150 }}
 		>
-			<div class="mb-8 rounded-full bg-gray-100 p-6 dark:bg-gray-700">
+			<div class="mb-6 rounded-full bg-gray-100 p-4 md:mb-8 md:p-6 dark:bg-gray-700">
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
-					class="h-20 w-20 text-gray-500"
+					class="h-12 w-12 text-gray-500 md:h-20 md:w-20"
 					fill="none"
 					viewBox="0 0 24 24"
 					stroke="currentColor"
@@ -375,15 +380,15 @@
 					/>
 				</svg>
 			</div>
-			<h2 class="mb-3 text-3xl font-bold">No content found</h2>
-			<p class="mb-8 max-w-md text-gray-600 dark:text-gray-400">
-				We couldn't find any content in the {genre.name} category. Please try another category.
+			<h2 class="mb-2 text-xl font-bold md:mb-3 md:text-3xl">No content found</h2>
+			<p class="mb-6 max-w-md text-sm text-gray-600 md:mb-8 md:text-base dark:text-gray-400">
+				Maaf, tidak ada konten di {genre?.name || genreName}. Silakan coba kategori lainnya.
 			</p>
 			<a
 				href="/genres"
-				class="from-primary to-primary-dark hover:from-primary-dark hover:to-primary hover:shadow-primary/30 rounded-xl bg-gradient-to-r px-8 py-4 font-medium text-white transition-all duration-300 hover:shadow-lg"
+				class="from-primary to-primary-dark hover:from-primary-dark hover:to-primary hover:shadow-primary/30 rounded-lg bg-gradient-to-r px-6 py-3 text-sm font-medium text-white transition-all duration-300 hover:shadow-lg md:rounded-xl md:px-8 md:py-4 md:text-base"
 			>
-				Browse Categories
+				Lihat Semua Genre
 			</a>
 		</div>
 	{/if}
@@ -413,6 +418,40 @@
 		}
 		50% {
 			transform: scale(1.05);
+		}
+	}
+
+	/* Add responsive utilities */
+	@media (max-width: 480px) {
+		.xs\:grid-cols-2 {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+	}
+
+	/* Add hover effects */
+	.card-hover-effect {
+		transition: all 0.3s ease;
+	}
+
+	.card-hover-effect:hover {
+		transform: translateY(-5px);
+		box-shadow: 0 10px 25px -5px rgba(var(--color-primary), 0.1);
+	}
+
+	/* Improve loading animations */
+	.content-fade-in {
+		animation: contentFadeIn 0.5s ease forwards;
+		opacity: 0;
+	}
+
+	@keyframes contentFadeIn {
+		from {
+			opacity: 0;
+			transform: translateY(10px);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
 		}
 	}
 </style>
