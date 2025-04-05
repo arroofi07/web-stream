@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount, onDestroy } from 'svelte';
+	import { onMount, onDestroy, afterUpdate } from 'svelte';
 	import { Button } from '$lib/components/ui/button';
 	import {
 		Card,
@@ -16,6 +16,7 @@
 	import overGoddess from '$lib/assets/cover/tales-of-herding-gods.jpg';
 	import { page } from '$app/stores';
 	import Ongoing from '$lib/components/ongoing.svelte';
+	import { browser } from '$app/environment';
 
 	interface typeData {
 		data: {
@@ -153,6 +154,10 @@
 	let adAttempts = $state(0);
 	const MAX_AD_ATTEMPTS = 3;
 
+	// Add these variables for navigation tracking
+	let isReturningToPage = $state(false);
+	let pageVisits = $state(0);
+
 	function changeCoverImage() {
 		if (contents && contents.length > 0) {
 			// Only use the first 4 images (or fewer if there aren't 4 available)
@@ -164,6 +169,20 @@
 
 	onMount(() => {
 		isPageLoaded = true;
+		pageVisits++;
+
+		// Check if this is a return visit
+		if (browser) {
+			// Use sessionStorage to track if we're returning to the page
+			const lastVisitedPage = sessionStorage.getItem('lastVisitedPage');
+			if (lastVisitedPage && lastVisitedPage !== window.location.pathname) {
+				isReturningToPage = true;
+				// Fast refresh for returning users
+				quickRefreshContent();
+			}
+			// Store current page for future reference
+			sessionStorage.setItem('lastVisitedPage', window.location.pathname);
+		}
 
 		// Build episode map for faster lookups
 		buildEpisodeMap();
@@ -185,15 +204,71 @@
 			}, 4000);
 		}
 
-		// Improved ad loading strategy
-		loadAds();
+		// Improved ad loading strategy with priority loading for returning users
+		if (isReturningToPage) {
+			// Load ads immediately for returning users
+			loadAds(true);
+		} else {
+			// Normal loading for first visit
+			loadAds();
+		}
+
+		// Add navigation event listener to detect when user is coming back to this page
+		if (browser) {
+			window.addEventListener('pageshow', handlePageShow);
+		}
 	});
 
 	onDestroy(() => {
 		if (coverImageInterval) {
 			clearInterval(coverImageInterval);
 		}
+
+		// Clean up event listener
+		if (browser) {
+			window.removeEventListener('pageshow', handlePageShow);
+		}
 	});
+
+	// Function to handle page show events (including back navigation)
+	function handlePageShow(event) {
+		// Check if the page is being loaded from cache (back/forward navigation)
+		if (event.persisted) {
+			isReturningToPage = true;
+			// Perform a quick refresh when returning via back button
+			quickRefreshContent();
+			// Reload ads with priority
+			loadAds(true);
+		}
+	}
+
+	// Function to quickly refresh content without full page reload
+	function quickRefreshContent() {
+		console.log('Performing quick refresh of content');
+
+		// Reset loading states
+		isLoading = false;
+		loadingContentId = null;
+		loadingGenreId = null;
+
+		// Rebuild episode map to ensure latest data
+		buildEpisodeMap();
+
+		// Update filtered and paginated contents
+		if (!searchQueryState) {
+			filteredContents = [...(contents || [])];
+		} else {
+			performSearch();
+		}
+
+		updatePaginatedContents();
+
+		// Force UI update
+		isPageLoaded = false;
+		setTimeout(() => {
+			isPageLoaded = true;
+		}, 10);
+	}
 
 	// Build a map of content_id to episodes for faster lookups
 	function buildEpisodeMap() {
@@ -357,7 +432,7 @@
 	}
 
 	// Function to load ads with retry mechanism
-	function loadAds() {
+	function loadAds(isPriority = false) {
 		// Load social bar script with better error handling
 		if (!adLoaded && adAttempts < MAX_AD_ATTEMPTS) {
 			adAttempts++;
@@ -368,14 +443,14 @@
 				socialBarScript.type = 'text/javascript';
 				socialBarScript.src =
 					'//pl26302165.effectiveratecpm.com/2d/8c/88/2d8c88477fa6d1c610e37670b907ee53.js';
-				socialBarScript.async = true; // Make it async for better performance
+				socialBarScript.async = !isPriority; // Make it blocking for priority loads
 
 				// Load the banner ad script
 				const bannerAdScript = document.createElement('script');
 				bannerAdScript.setAttribute('data-cfasync', 'false');
 				bannerAdScript.src =
 					'//pl26302113.effectiveratecpm.com/d561750ea858b8acfce6ddcf0eb58de7/invoke.js';
-				bannerAdScript.async = true; // Make it async for better performance
+				bannerAdScript.async = !isPriority; // Make it blocking for priority loads
 
 				// Add event listeners to track loading
 				socialBarScript.onload = () => {
@@ -400,12 +475,12 @@
 				// Error handling
 				socialBarScript.onerror = () => {
 					console.error('Failed to load social bar script, retrying...');
-					setTimeout(loadAds, 1000); // Retry after 1 second
+					setTimeout(() => loadAds(isPriority), isPriority ? 500 : 1000); // Faster retry for priority
 				};
 
 				bannerAdScript.onerror = () => {
 					console.error('Failed to load banner ad script, retrying...');
-					setTimeout(loadAds, 1000); // Retry after 1 second
+					setTimeout(() => loadAds(isPriority), isPriority ? 500 : 1000); // Faster retry for priority
 				};
 
 				// Append scripts to document
@@ -414,7 +489,7 @@
 			} catch (error) {
 				console.error('Error loading ad scripts:', error);
 				// Retry after a delay
-				setTimeout(loadAds, 1500);
+				setTimeout(() => loadAds(isPriority), isPriority ? 800 : 1500);
 			}
 		}
 	}
