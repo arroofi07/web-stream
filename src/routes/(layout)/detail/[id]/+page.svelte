@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
 	import { afterNavigate, goto } from '$app/navigation';
-	import Ongoing from '$lib/components/Ongoing.svelte';
+	import Ongoing from '$lib/components/ongoing.svelte';
 
 	interface EpisodeData {
 		id: number;
@@ -219,7 +219,7 @@
 									d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
 								/>
 							</svg>
-							{formatDate(episode.release_date)}
+							{formatDate(episode.content.release_date)}
 						</span>
 						<span
 							class="bg-primary flex items-center rounded-full px-3 py-1 text-sm font-medium text-white"

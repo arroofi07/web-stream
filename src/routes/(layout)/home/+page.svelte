@@ -652,39 +652,9 @@
 			containerClass="rounded-lg border mb-10 p-6 shadow-lg backdrop-blur bg-white text-black"
 		/>
 
-		<!-- CTA Section - New section -->
-		<section class="mb-12">
-			<div class="bg-primary relative overflow-hidden rounded-2xl p-8 md:p-12">
-				<div
-					class="absolute top-0 right-0 h-64 w-64 translate-x-1/4 -translate-y-1/4 rounded-full bg-white/10"
-				></div>
-				<div
-					class="absolute bottom-0 left-0 h-40 w-40 -translate-x-1/4 translate-y-1/4 rounded-full bg-white/10"
-				></div>
-
-				<div class="relative z-10 max-w-2xl">
-					<h2 class="mb-4 text-3xl font-bold text-white md:text-4xl">Join Our Donghua Community</h2>
-					<p class="mb-6 text-lg text-white/90">
-						Get notified about new releases, special events, and exclusive content.
-					</p>
-
-					<div class="flex flex-col space-y-4 sm:flex-row sm:space-y-0 sm:space-x-4">
-						<Input
-							type="email"
-							placeholder="Enter your email"
-							class="h-12 border-white/30 bg-white/20 text-white placeholder:text-white/70 focus:border-white"
-						/>
-						<Button class="text-primary h-12 bg-white hover:bg-white/90">Subscribe Now</Button>
-					</div>
-				</div>
-			</div>
-		</section>
-
 		<!-- Footer Button -->
 		<div class="mb-8 text-center">
-			<h3 class="font-sans text-lg font-semibold">
-				Created by Naa Enterprise 🙆‍♂️🙋‍♂️ & Svelte Powered 2025
-			</h3>
+			<h3 class="font-sans text-lg font-semibold">Created With Svelte Powered 2025</h3>
 		</div>
 	</div>
 </div>
