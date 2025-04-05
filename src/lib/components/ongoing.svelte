@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
+	import { onMount } from 'svelte';
 
 	// Define proper interfaces for your data
 	interface ContentItem {
@@ -36,16 +37,32 @@
 	let isLoading = false;
 	let loadingEpisodeId: number | null = null;
 
+	// Reset loading state on mount
+	onMount(() => {
+		isLoading = false;
+		loadingEpisodeId = null;
+	});
+
 	// Function to handle episode navigation with loading state
 	async function navigateToEpisode(episodeId: number | undefined) {
 		if (!episodeId) return;
-		isLoading = true;
-		loadingEpisodeId = episodeId;
 
-		// Add a small delay to show loading state
-		await new Promise((resolve) => setTimeout(resolve, 500));
+		try {
+			isLoading = true;
+			loadingEpisodeId = episodeId;
 
-		goto(`/detail/${episodeId}`);
+			// Add a small delay to show loading state
+			await new Promise((resolve) => setTimeout(resolve, 300));
+
+			// Navigate to the detail page
+			await goto(`/detail/${episodeId}`);
+		} catch (error) {
+			console.error('Navigation error:', error);
+		} finally {
+			// Ensure loading state is reset even if navigation fails
+			isLoading = false;
+			loadingEpisodeId = null;
+		}
 	}
 </script>
 
