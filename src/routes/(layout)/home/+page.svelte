@@ -148,6 +148,11 @@
 	// Add loading state for genre links
 	let loadingGenreId = $state<number | null>(null);
 
+	// Add these variables for ad management
+	let adLoaded = $state(false);
+	let adAttempts = $state(0);
+	const MAX_AD_ATTEMPTS = 3;
+
 	function changeCoverImage() {
 		if (contents && contents.length > 0) {
 			// Only use the first 4 images (or fewer if there aren't 4 available)
@@ -180,12 +185,8 @@
 			}, 4000);
 		}
 
-		// Load social bar script
-		const socialBarScript = document.createElement('script');
-		socialBarScript.type = 'text/javascript';
-		socialBarScript.src =
-			'//pl26302165.effectiveratecpm.com/2d/8c/88/2d8c88477fa6d1c610e37670b907ee53.js';
-		document.head.appendChild(socialBarScript);
+		// Improved ad loading strategy
+		loadAds();
 	});
 
 	onDestroy(() => {
@@ -354,6 +355,69 @@
 
 		goto(`/genres/${genreId}`);
 	}
+
+	// Function to load ads with retry mechanism
+	function loadAds() {
+		// Load social bar script with better error handling
+		if (!adLoaded && adAttempts < MAX_AD_ATTEMPTS) {
+			adAttempts++;
+
+			try {
+				// Load the social bar script
+				const socialBarScript = document.createElement('script');
+				socialBarScript.type = 'text/javascript';
+				socialBarScript.src =
+					'//pl26302165.effectiveratecpm.com/2d/8c/88/2d8c88477fa6d1c610e37670b907ee53.js';
+				socialBarScript.async = true; // Make it async for better performance
+
+				// Load the banner ad script
+				const bannerAdScript = document.createElement('script');
+				bannerAdScript.setAttribute('data-cfasync', 'false');
+				bannerAdScript.src =
+					'//pl26302113.effectiveratecpm.com/d561750ea858b8acfce6ddcf0eb58de7/invoke.js';
+				bannerAdScript.async = true; // Make it async for better performance
+
+				// Add event listeners to track loading
+				socialBarScript.onload = () => {
+					console.log('Social bar script loaded successfully');
+					adLoaded = true;
+				};
+
+				bannerAdScript.onload = () => {
+					console.log('Banner ad script loaded successfully');
+
+					// Create container if it doesn't exist
+					if (!document.getElementById('container-d561750ea858b8acfce6ddcf0eb58de7')) {
+						const container = document.createElement('div');
+						container.id = 'container-d561750ea858b8acfce6ddcf0eb58de7';
+						const adContainer = document.querySelector('.ad-container');
+						if (adContainer) {
+							adContainer.appendChild(container);
+						}
+					}
+				};
+
+				// Error handling
+				socialBarScript.onerror = () => {
+					console.error('Failed to load social bar script, retrying...');
+					setTimeout(loadAds, 1000); // Retry after 1 second
+				};
+
+				bannerAdScript.onerror = () => {
+					console.error('Failed to load banner ad script, retrying...');
+					setTimeout(loadAds, 1000); // Retry after 1 second
+				};
+
+				// Append scripts to document
+				document.head.appendChild(socialBarScript);
+				document.head.appendChild(bannerAdScript);
+			} catch (error) {
+				console.error('Error loading ad scripts:', error);
+				// Retry after a delay
+				setTimeout(loadAds, 1500);
+			}
+		}
+	}
 </script>
 
 <div
@@ -464,14 +528,22 @@
 		</div>
 
 		<!-- Native Banner Ad -->
-		<div class="mx-auto mb-16 max-w-5xl rounded-xl bg-white p-6 shadow-lg dark:bg-gray-800">
+		<div
+			class="ad-container mx-auto mb-16 max-w-5xl rounded-xl bg-white p-6 shadow-lg dark:bg-gray-800"
+		>
 			<div class="mb-4 text-center">
 				<span class="text-sm text-gray-500 dark:text-gray-400">Sponsored Content</span>
 			</div>
-			<script
-				data-cfasync="false"
-				src="//pl26302113.effectiveratecpm.com/d561750ea858b8acfce6ddcf0eb58de7/invoke.js"
-			></script>
+
+			{#if !adLoaded}
+				<div class="flex items-center justify-center py-8">
+					<div
+						class="border-primary h-8 w-8 animate-spin rounded-full border-4 border-t-transparent"
+					></div>
+					<span class="ml-3 text-gray-600 dark:text-gray-400">Loading advertisement...</span>
+				</div>
+			{/if}
+
 			<div id="container-d561750ea858b8acfce6ddcf0eb58de7"></div>
 		</div>
 
