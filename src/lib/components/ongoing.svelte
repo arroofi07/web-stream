@@ -34,11 +34,17 @@
 	export let allEpisodes: EpisodeItem[] = [];
 	export let containerClass = '';
 	let isLoading = false;
+	let loadingEpisodeId: number | null = null;
 
 	// Function to handle episode navigation with loading state
-	function navigateToEpisode(episodeId: number | undefined) {
+	async function navigateToEpisode(episodeId: number | undefined) {
 		if (!episodeId) return;
 		isLoading = true;
+		loadingEpisodeId = episodeId;
+
+		// Add a small delay to show loading state
+		await new Promise((resolve) => setTimeout(resolve, 500));
+
 		goto(`/detail/${episodeId}`);
 	}
 </script>
@@ -77,8 +83,8 @@
 
 				<button
 					class="group from-primary/90 to-primary relative w-full overflow-hidden rounded-lg bg-gradient-to-br text-left text-white shadow transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
-					onclick={() => navigateToEpisode(latestEpisode.id)}
-					onkeydown={(e) => e.key === 'Enter' && navigateToEpisode(latestEpisode.id)}
+					on:click={() => navigateToEpisode(latestEpisode.id)}
+					on:keydown={(e) => e.key === 'Enter' && navigateToEpisode(latestEpisode.id)}
 				>
 					<div class="absolute inset-0 bg-black/20"></div>
 
@@ -93,6 +99,18 @@
 								Terbaru: Episode {latestEpisode.episode_number}
 							</p>
 						</div>
+
+						<!-- Loading indicator -->
+						{#if isLoading && loadingEpisodeId === latestEpisode.id}
+							<div
+								class="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/60 backdrop-blur-sm"
+							>
+								<div
+									class="h-8 w-8 animate-spin rounded-full border-3 border-white border-t-transparent"
+								></div>
+								<p class="text-sm font-medium text-white">Loading...</p>
+							</div>
+						{/if}
 
 						<!-- Play icon that appears on hover -->
 						<div
