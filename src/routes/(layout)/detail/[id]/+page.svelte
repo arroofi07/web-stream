@@ -442,22 +442,24 @@
 						Daftar Episode
 					</h2>
 
-					<div
-						class="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6"
-					>
-						{#if allEpisodes && allEpisodes.length > 0}
-							{#each allEpisodes.filter((ep) => ep.content_id === episode.content_id) as ep, i}
-								<button
-									onclick={() => navigateToEpisode(ep.id)}
-									class={`rounded px-3 py-2 ${episode && episode.episode_number === ep.episode_number ? 'bg-primary text-white' : 'bg-gray-700 text-gray-200 hover:bg-gray-600'} text-center transition-all duration-200`}
-								>
-									{ep.episode_number}
-								</button>
-							{/each}
-						{:else}
-							<p class="text-gray-400">Tidak ada episode tersedia untuk episode ini.</p>
-						{/if}
-					</div>
+					{#if allEpisodes && allEpisodes.length > 0}
+						<div class="mb-4 max-h-60 overflow-y-auto pr-2">
+							<div
+								class="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6"
+							>
+								{#each allEpisodes.filter((ep) => ep.content_id === episode.content_id) as ep, i}
+									<button
+										onclick={() => navigateToEpisode(ep.id)}
+										class={`rounded px-3 py-2 ${episode && episode.episode_number === ep.episode_number ? 'bg-primary text-white' : 'bg-gray-700 text-gray-200 hover:bg-gray-600'} text-center transition-all duration-200`}
+									>
+										{ep.episode_number}
+									</button>
+								{/each}
+							</div>
+						</div>
+					{:else}
+						<p class="text-gray-400">Tidak ada episode tersedia untuk episode ini.</p>
+					{/if}
 				</div>
 
 				<!-- Description -->
