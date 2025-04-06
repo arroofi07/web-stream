@@ -782,12 +782,17 @@
 										</div>
 									</div>
 									<div class="flex-1 bg-white p-4 dark:bg-gray-800">
-										<div class="mb-2 flex items-center justify-between">
-											<h3 class="line-clamp-1 text-lg font-bold">
+										<div class="mb-2">
+											<h3
+												class="line-clamp-2 min-h-[2.5rem] text-sm leading-tight font-bold sm:min-h-[3rem] sm:text-base md:text-lg"
+												title={content.title}
+											>
 												{content.title}
 											</h3>
 										</div>
-										<p class="mb-2 text-sm font-semibold text-gray-600 dark:text-gray-400">
+										<p
+											class="mb-2 text-xs font-semibold text-gray-600 sm:text-sm dark:text-gray-400"
+										>
 											Subtitle Indonesia
 										</p>
 										<div class="mb-3 flex items-center">
@@ -797,7 +802,7 @@
 										</div>
 										<Button
 											size="sm"
-											class="bg-primary/90 w-full cursor-pointer text-white transition-colors duration-300 hover:bg-black"
+											class="bg-primary/90 w-full cursor-pointer text-xs text-white transition-colors duration-300 hover:bg-black sm:text-sm"
 											variant={hoveredCard === i ? 'default' : 'outline'}
 										>
 											Watch
