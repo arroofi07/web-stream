@@ -1,22 +1,46 @@
 
 //episodes
 INSERT INTO episodes (content_id, title, episode_number, description, duration, release_date) VALUES
-(8, 'My Senior Brother is Too Strong', 1, 'hello', 8, '2025-04-06'),
-(8, 'My Senior Brother is Too Strong', 2, 'hello', 8, '2025-04-06'),
-(8, 'My Senior Brother is Too Strong', 3, 'hello', 8, '2025-04-06'),
-(8, 'My Senior Brother is Too Strong', 4, 'hello', 8, '2025-04-06'),
-(8, 'My Senior Brother is Too Strong', 5, 'hello', 8, '2025-04-06'),
-(8, 'My Senior Brother is Too Strong', 6, 'hello', 8, '2025-04-06'),
-(8, 'My Senior Brother is Too Strong', 7, 'hello', 8, '2025-04-06'),
+(9, 'Summer Punch (Ran xia)', 1, 'hello', 14, '2023-04-07'),
+(9, 'Summer Punch (Ran xia)', 2, 'hello', 14, '2023-04-07'),
+(9, 'Summer Punch (Ran xia)', 3, 'hello', 14, '2023-04-07'),
+(9, 'Summer Punch (Ran xia)', 4, 'hello', 14, '2023-04-07'),
+(9, 'Summer Punch (Ran xia)', 5, 'hello', 14, '2023-04-07'),
+(9, 'Summer Punch (Ran xia)', 6, 'hello', 14, '2023-04-07'),
+(9, 'Summer Punch (Ran xia)', 7, 'hello', 14, '2023-04-07'),
+(9, 'Summer Punch (Ran xia)', 8, 'hello', 14, '2023-04-07'),
+(9, 'Summer Punch (Ran xia)', 9, 'hello', 14, '2023-04-07'),
+(9, 'Summer Punch (Ran xia)', 10, 'hello', 14, '2023-04-07'),
+(9, 'Summer Punch (Ran xia)', 11, 'hello', 14, '2023-04-07'),
+(9, 'Summer Punch (Ran xia)', 12, 'hello', 14, '2023-04-07'),
+(9, 'Summer Punch (Ran xia)', 13, 'hello', 14, '2023-04-07'),
+(9, 'Summer Punch (Ran xia)', 14, 'hello', 14, '2023-04-07'),
+(9, 'Summer Punch (Ran xia)', 15, 'hello', 14, '2023-04-07'),
+(9, 'Summer Punch (Ran xia)', 16, 'hello', 14, '2023-04-07'),
+
+
+
+
+
 
 
 
 //streaming_links
 INSERT INTO streaming_links (episode_id, server_name, quality, url, is_active) VALUES
-(52, 'ok.ru', '1080p', 'https://ok.ru/videoembed/9178399836777?nochat=1', 1),
-(53, 'ok.ru', '1080p', 'https://ok.ru/videoembed/9178399771241?nochat=1', 1),
-(54, 'ok.ru', '1080p', 'https://ok.ru/videoembed/9178399705705?nochat=1', 1),
-(55, 'ok.ru', '1080p', 'https://ok.ru/videoembed/9178399640169?nochat=1', 1),
-(56, 'ok.ru', '1080p', 'https://ok.ru/videoembed/9178399574633?nochat=1', 1),
-(57, 'ok.ru', '1080p', 'https://ok.ru/videoembed/9178399509097?nochat=1', 1),
-(58, 'ok.ru', '1080p', 'https://ok.ru/videoembed/9184732777065?nochat=1', 1),
+(59, 'ok.ru', '1080p', 'https://geo.dailymotion.com/player.html?video=x8qjwgb', 1), 
+(60, 'ok.ru', '1080p', 'https://geo.dailymotion.com/player.html?video=x8qqjhp', 1), 
+(61, 'ok.ru', '1080p', 'https://geo.dailymotion.com/player.html?video=x8q6h4h', 1), 
+(62, 'ok.ru', '1080p', 'https://geo.dailymotion.com/player.html?video=x8q6hgt', 1), 
+(63, 'ok.ru', '1080p', 'https://geo.dailymotion.com/player.html?video=x8qtlli', 1), 
+(64, 'ok.ru', '1080p', 'https://geo.dailymotion.com/player.html?video=x8q8ry0', 1), 
+(65, 'ok.ru', '1080p', 'https://geo.dailymotion.com/player.html?video=x8qaai0', 1),
+(66, 'ok.ru', '1080p', 'https://geo.dailymotion.com/player.html?video=x8qbdwe', 1),
+(67, 'ok.ru', '1080p', 'https://geo.dailymotion.com/player.html?video=x8qcl36', 1),
+(68, 'ok.ru', '1080p', 'https://geo.dailymotion.com/player.html?video=x8qfqup', 1), 
+(69, 'ok.ru', '1080p', 'https://geo.dailymotion.com/player.html?video=x8qfqxe', 1), 
+(70, 'ok.ru', '1080p', 'https://geo.dailymotion.com/player.html?video=x8qfqzy', 1), 
+(71, 'ok.ru', '1080p', 'https://geo.dailymotion.com/player.html?video=x8qh16x', 1), 
+(72, 'ok.ru', '1080p', 'https://geo.dailymotion.com/player.html?video=x8qicvu', 1), 
+(73, 'ok.ru', '1080p', 'https://www.youtube.com/embed/me5YwmHhzvg?si=m3SxB6H96yOIcQiO', 1), 
+(74, 'ok.ru', '1080p', 'https://www.youtube.com/embed/T7VVhbxbqp0?si=Dg-lHkvFWapQXuxp', 1), 
+
