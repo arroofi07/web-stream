@@ -152,7 +152,7 @@
 
 	// Pagination state
 	let currentPage = $state(1);
-	let itemsPerPage = $state(10);
+	let itemsPerPage = $state(12);
 	let totalPages = $state(1);
 	let paginatedContents = $state<typeof contents>([]);
 
