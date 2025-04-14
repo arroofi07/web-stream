@@ -83,7 +83,7 @@
 				d="M4 6h16M4 10h16M4 14h16M4 18h16"
 			/>
 		</svg>
-		Ongoing Donghua
+		Ongoing 
 	</h2>
 
 	<div class="px-4 py-6">

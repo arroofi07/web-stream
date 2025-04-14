@@ -118,6 +118,10 @@
 	let isReturningToPage = $state(false);
 	let pageVisits = $state(0);
 
+	// Add these variables for content filtering by country
+	let activeCountryFilter = $state<string | null>(null);
+	let countryFilteredContents = $state<typeof contents>([]);
+
 	$effect(() => {
 		// Update searchQuery when URL changes
 		const newSearchQuery = $page.url.searchParams.get('search') || '';
@@ -357,6 +361,14 @@
 			contentFilterCache.set(query, filteredContents);
 		}
 
+		// Apply country filter if active
+		if (activeCountryFilter) {
+			filteredContents = filteredContents.filter(
+				(content: { country_origin: string }) =>
+					content.country_origin.toLowerCase() === activeCountryFilter
+			);
+		}
+
 		// Update URL with search parameter without page reload
 		const url = new URL(window.location.href);
 		if (query) {
@@ -566,6 +578,58 @@
 		const content = contents[currentCoverIndex];
 		return content?.cover_image || overGoddess;
 	}
+
+	// Function to filter content by country origin
+	function filterByCountry(country: string) {
+		// If clicking the already active filter, reset it
+		if (activeCountryFilter === country.toLowerCase()) {
+			activeCountryFilter = null;
+			resetCountryFilter();
+			return;
+		}
+
+		activeCountryFilter = country.toLowerCase();
+		isLoading = true;
+
+		// Reset to first page
+		currentPage = 1;
+
+		// Filter contents based on country - fix the country values to match your data
+		if (country.toLowerCase() === 'jepang') {
+			countryFilteredContents = (contents || []).filter(
+				(content: { country_origin: string }) => content.country_origin.toLowerCase() === 'jepang' // Changed to match your data
+			);
+		} else if (country.toLowerCase() === 'china') {
+			countryFilteredContents = (contents || []).filter(
+				(content: { country_origin: string }) => content.country_origin.toLowerCase() === 'china'
+			);
+		}
+
+		// Update filtered contents with country filter
+		filteredContents = countryFilteredContents;
+
+		// Update paginated contents
+		updatePaginatedContents();
+
+		// Finish loading
+		setTimeout(() => {
+			isLoading = false;
+		}, 300);
+	}
+
+	// Function to reset country filter
+	function resetCountryFilter() {
+		activeCountryFilter = null;
+
+		// If there's a search query, apply that filter
+		if (searchQueryState) {
+			performSearch();
+		} else {
+			// Otherwise show all contents
+			filteredContents = [...(contents || [])];
+			updatePaginatedContents();
+		}
+	}
 </script>
 
 <div
@@ -596,10 +660,10 @@
 			>
 				<div class="space-y-6">
 					<h1 class="text-shadow-lg text-5xl leading-tight font-extrabold text-white md:text-7xl">
-						Dunia <span class="text-primary">Donghua</span> yang Luar Biasa
+						Dunia <span class="text-primary">Animasi</span> yang Luar Biasa
 					</h1>
 					<p class="text-lg text-gray-200 md:text-xl">
-						Ayo nikmati tontonan berkualitas dengan resolusi tinggi dari berbagai donghua.
+						Ayo nikmati tontonan berkualitas dengan resolusi tinggi dari berbagai Animasi.
 					</p>
 					<div class="flex flex-wrap gap-4 pt-4">
 						<Button size="lg" class="bg-primary hover:bg-primary/90 group relative overflow-hidden">
@@ -668,7 +732,7 @@
 
 					<Input
 						type="search"
-						placeholder="Cari donghua favoritmu..."
+						placeholder="Cari animasi favoritmu..."
 						class="z-40  flex-1 border-0 bg-transparent  px-6 py-6 text-lg transition-all focus-visible:outline-none "
 						bind:value={searchQueryState}
 						onkeyup={(e: KeyboardEvent) => e.key === 'Enter' && handleSearch()}
@@ -695,6 +759,63 @@
 				</div>
 			</div>
 		</div>
+
+		<!-- Category Selection Section -->
+		<section class="mb-16">
+			<h1 class="mb-8 text-center text-3xl font-bold">Pilih Animasi yang ingin kamu tonton</h1>
+			<div class="mx-auto grid max-w-3xl grid-cols-2 gap-4">
+				<Button
+					class={`group relative cursor-pointer overflow-hidden rounded-xl ${
+						activeCountryFilter === 'jepang'
+							? 'from-primary to-black shadow-primary/10 bg-gradient-to-r'
+							: 'from-primary/80 to-primary/80 hover:from-primary/90 hover:to-primary hover:shadow-primary/20 bg-gradient-to-r'
+					} p-6 shadow-lg transition-all duration-300`}
+					onclick={() => filterByCountry('jepang')}
+				>
+					<div
+						class="absolute inset-0 bg-white opacity-0 transition-opacity duration-300 group-hover:opacity-10"
+					></div>
+					<div class="flex flex-col items-center justify-center space-y-2 ">
+						<span class="font-sans text-xl font-semibold text-white">
+							Anime
+							<span class="hidden text-xs text-white/80 md:block lg:block">(Jepang)</span>
+						</span>
+					</div>
+				</Button>
+				<Button
+					class={`group relative cursor-pointer overflow-hidden rounded-xl ${
+						activeCountryFilter === 'china'
+							? 'from-primary to-black shadow-primary/10 bg-gradient-to-r'
+							: 'from-primary/80 to-primary/80 hover:from-primary hover:to-primary/90 hover:shadow-primary/20 bg-gradient-to-r'
+					} p-6 shadow-lg transition-all duration-300`}
+					onclick={() => filterByCountry('china')}
+				>
+					<div
+						class="absolute inset-0 bg-white opacity-0 transition-opacity duration-300 group-hover:opacity-10"
+					></div>
+					<div class="flex flex-col items-center justify-center space-y-2">
+						<span class="font-sans text-xl font-semibold text-white">
+							Donghua
+							<span class="hidden text-xs text-white/80 md:block lg:block">(China)</span>
+						</span>
+					</div>
+				</Button>
+			</div>
+
+			{#if activeCountryFilter}
+				<div class="mt-4 flex justify-center">
+					<Button
+						variant="outline"
+						size="sm"
+						onclick={resetCountryFilter}
+						class="flex items-center gap-2 bg-primary text-white"
+					>
+						<X class="h-4 w-4" />	
+						Reset Filter
+					</Button>
+				</div>
+			{/if}
+		</section>
 
 		<!-- Latest Releases Section -->
 		<section class="mb-20">
@@ -867,7 +988,7 @@
 			<div class="grid grid-cols-2 gap-x-12 gap-y-6 md:grid-cols-3 lg:grid-cols-4">
 				{#each categories as category, i}
 					<div
-						class="hover:border-primary dark:hover:border-primary group border-b border-gray-200 pb-2 transition-all duration-300 dark:border-gray-700"
+						class="hover:border-primary dark:hover:border-primary group cursor-pointer border-b border-gray-200 pb-2 transition-all duration-300 dark:border-gray-700"
 						in:fly={{ y: 20, duration: 800, delay: 1000 + i * 50 }}
 						onclick={() => navigateToGenre(category.id)}
 					>
