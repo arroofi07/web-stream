@@ -767,7 +767,7 @@
 				<Button
 					class={`group relative cursor-pointer overflow-hidden rounded-xl ${
 						activeCountryFilter === 'jepang'
-							? 'from-primary to-black shadow-primary/10 bg-gradient-to-r'
+							? 'from-primary shadow-primary/10 bg-gradient-to-r to-black'
 							: 'from-primary/80 to-primary/80 hover:from-primary/90 hover:to-primary hover:shadow-primary/20 bg-gradient-to-r'
 					} p-6 shadow-lg transition-all duration-300`}
 					onclick={() => filterByCountry('jepang')}
@@ -775,7 +775,7 @@
 					<div
 						class="absolute inset-0 bg-white opacity-0 transition-opacity duration-300 group-hover:opacity-10"
 					></div>
-					<div class="flex flex-col items-center justify-center space-y-2 ">
+					<div class="flex flex-col items-center justify-center space-y-2">
 						<span class="font-sans text-xl font-semibold text-white">
 							Anime
 							<span class="hidden text-xs text-white/80 md:block lg:block">(Jepang)</span>
@@ -785,7 +785,7 @@
 				<Button
 					class={`group relative cursor-pointer overflow-hidden rounded-xl ${
 						activeCountryFilter === 'china'
-							? 'from-primary to-black shadow-primary/10 bg-gradient-to-r'
+							? 'from-primary shadow-primary/10 bg-gradient-to-r to-black'
 							: 'from-primary/80 to-primary/80 hover:from-primary hover:to-primary/90 hover:shadow-primary/20 bg-gradient-to-r'
 					} p-6 shadow-lg transition-all duration-300`}
 					onclick={() => filterByCountry('china')}
@@ -808,9 +808,9 @@
 						variant="outline"
 						size="sm"
 						onclick={resetCountryFilter}
-						class="flex items-center gap-2 bg-primary text-white"
+						class="bg-primary flex items-center gap-2 text-white"
 					>
-						<X class="h-4 w-4" />	
+						<X class="h-4 w-4" />
 						Reset Filter
 					</Button>
 				</div>
@@ -850,9 +850,9 @@
 						{#if latestEpisode}
 							<Card
 								class="group overflow-hidden border-none shadow-lg transition-all hover:scale-105 hover:shadow-xl active:scale-75"
-								on:mouseenter={() => (hoveredCard = i)}
-								on:mouseleave={() => (hoveredCard = -1)}
-								on:click={() => navigateToDetail(latestEpisode.id, content.id)}
+								onmouseenter={() => (hoveredCard = i)}
+								onmouseleave={() => (hoveredCard = -1)}
+								onclick={() => navigateToDetail(latestEpisode.id, content.id)}
 							>
 								<div class="flex h-full flex-col">
 									<div class="relative h-48 overflow-hidden">
@@ -944,7 +944,7 @@
 							variant="outline"
 							size="sm"
 							disabled={currentPage === 1}
-							on:click={() => changePage(currentPage - 1)}
+							onclick={() => changePage(currentPage - 1)}
 							class="px-3"
 						>
 							&lt;
@@ -955,7 +955,7 @@
 							<Button
 								variant={currentPage === pageNumber ? 'default' : 'outline'}
 								size="sm"
-								on:click={() => changePage(pageNumber)}
+								onclick={() => changePage(pageNumber)}
 								class={currentPage === pageNumber ? 'bg-primary text-white' : ''}
 							>
 								{pageNumber}
@@ -966,7 +966,7 @@
 							variant="outline"
 							size="sm"
 							disabled={currentPage === totalPages}
-							on:click={() => changePage(currentPage + 1)}
+							onclick={() => changePage(currentPage + 1)}
 							class="px-3"
 						>
 							&gt;
