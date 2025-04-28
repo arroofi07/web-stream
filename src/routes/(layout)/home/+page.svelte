@@ -480,7 +480,7 @@
 			socialBarPreload.rel = 'preload';
 			socialBarPreload.as = 'script';
 			socialBarPreload.href =
-				'//pl26302165.effectiveratecpm.com/2d/8c/88/2d8c88477fa6d1c610e37670b907ee53.js';
+				'//arrivingserpentoutbalance.com/2d/8c/88/2d8c88477fa6d1c610e37670b907ee53.js';
 			document.head.appendChild(socialBarPreload);
 
 			// Preload banner ad script
@@ -488,7 +488,7 @@
 			bannerAdPreload.rel = 'preload';
 			bannerAdPreload.as = 'script';
 			bannerAdPreload.href =
-				'//pl26302113.effectiveratecpm.com/d561750ea858b8acfce6ddcf0eb58de7/invoke.js';
+				'//arrivingserpentoutbalance.com/d561750ea858b8acfce6ddcf0eb58de7/invoke.js';
 			document.head.appendChild(bannerAdPreload);
 
 			console.log('Preloaded ad scripts');
@@ -520,14 +520,14 @@
 				const socialBarScript = document.createElement('script');
 				socialBarScript.type = 'text/javascript';
 				socialBarScript.src =
-					'//pl26302165.effectiveratecpm.com/2d/8c/88/2d8c88477fa6d1c610e37670b907ee53.js';
+					'//arrivingserpentoutbalance.com/2d/8c/88/2d8c88477fa6d1c610e37670b907ee53.js';
 				socialBarScript.async = false; // Make it synchronous to ensure it loads
 
 				// Banner ad script
 				const bannerAdScript = document.createElement('script');
 				bannerAdScript.setAttribute('data-cfasync', 'false');
 				bannerAdScript.src =
-					'//pl26302113.effectiveratecpm.com/d561750ea858b8acfce6ddcf0eb58de7/invoke.js';
+					'//arrivingserpentoutbalance.com/d561750ea858b8acfce6ddcf0eb58de7/invoke.js';
 				bannerAdScript.async = false; // Make it synchronous to ensure it loads
 
 				// Success handlers
@@ -668,7 +668,7 @@
 					<div class="flex flex-wrap gap-4 pt-4">
 						<Button size="lg" class="bg-primary hover:bg-primary/90 group relative overflow-hidden">
 							<a
-								href="https://www.effectiveratecpm.com/rn1sbgwa5z?key=ca5ea637b5bdf5bcefed785dbcee3505"
+								href=""
 								target="_blank"
 								rel="noopener noreferrer"
 							>
